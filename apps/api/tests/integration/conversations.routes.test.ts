@@ -70,9 +70,13 @@ describe("POST /conversations/:id/messages", () => {
 
   it("debería retornar 201 con el mensaje enviado", async () => {
     mockConversationMethods.sendOutgoingMessageToChannel.mockResolvedValueOnce({
-      id: "msg-out-1",
-      content: "Hola cliente",
-      senderType: "agent",
+      message: {
+        id: "msg-out-1",
+        content: "Hola cliente",
+        senderType: "agent",
+      },
+      channel: "whatsapp",
+      contactId: "c-1",
     });
 
     const res = await app.request("/conversations/conv-1/messages", {

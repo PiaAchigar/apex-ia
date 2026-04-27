@@ -61,13 +61,15 @@ describe("ConversationService", () => {
         where: vi.fn().mockResolvedValue(undefined),
       });
 
-      const msg = await service.sendOutgoingMessageToChannel(
+      const result = await service.sendOutgoingMessageToChannel(
         "conv-1",
         "hola",
         "agent-1"
       );
 
-      expect(msg.id).toBe("msg-out-1");
+      expect(result.message.id).toBe("msg-out-1");
+      expect(result.channel).toBe("whatsapp");
+      expect(result.contactId).toBe("c-1");
       expect(mockDb.update).toHaveBeenCalledOnce();
     });
   });
