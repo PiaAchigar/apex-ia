@@ -37,8 +37,8 @@ export class FacebookMessengerService {
   async handleIncomingMessengerWebhook(body: {
     object: string;
     entry: MessengerEntry[];
-  }) {
-    if (body.object !== "page") return;
+  }): Promise<{ conversationId: string; message: unknown } | null> {
+    if (body.object !== "page") return null;
 
     for (const entry of body.entry) {
       const messaging = entry.messaging ?? [];
@@ -61,7 +61,7 @@ export class FacebookMessengerService {
             }
           }
 
-          await this.inboxService.createConversationFromIncomingMessage({
+          const result = await this.inboxService.createConversationFromIncomingMessage({
             channel: "facebook",
             externalId: msg.mid,
             senderExternalId: event.sender.id,
@@ -70,11 +70,13 @@ export class FacebookMessengerService {
             mediaType,
             rawPayload: { event, pageId: entry.id },
           });
+          return result;
         } catch (err) {
           logger.error({ err }, "Error processing Messenger message");
         }
       }
     }
+    return null;
   }
 
   async sendMessengerTextMessage(

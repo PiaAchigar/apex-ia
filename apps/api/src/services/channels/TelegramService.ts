@@ -43,8 +43,10 @@ export class TelegramService {
     logger.info("Telegram bot initialized");
   }
 
-  async handleIncomingTelegramUpdate(update: TelegramUpdate): Promise<void> {
-    if (!update.message) return;
+  async handleIncomingTelegramUpdate(
+    update: TelegramUpdate
+  ): Promise<{ conversationId: string; message: unknown } | null> {
+    if (!update.message) return null;
 
     const msg = update.message;
     const chatId = msg.chat.id.toString();
@@ -76,7 +78,7 @@ export class TelegramService {
     }
 
     try {
-      await this.inboxService.createConversationFromIncomingMessage({
+      const result = await this.inboxService.createConversationFromIncomingMessage({
         channel: "telegram",
         externalId: `${chatId}_${msg.message_id}`,
         senderExternalId: senderId,
@@ -85,8 +87,16 @@ export class TelegramService {
         mediaType,
         rawPayload: { update, senderName: msg.from?.first_name },
       });
+
+      return result
+        ? {
+            conversationId: result.conversationId,
+            message: result.message,
+          }
+        : null;
     } catch (err) {
       logger.error({ err, chatId }, "Error processing Telegram message");
+      return null;
     }
   }
 

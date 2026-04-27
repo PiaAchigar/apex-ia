@@ -36,8 +36,8 @@ export class InstagramService {
   async handleIncomingInstagramWebhook(body: {
     object: string;
     entry: InstagramEntry[];
-  }) {
-    if (body.object !== "instagram") return;
+  }): Promise<{ conversationId: string; message: unknown } | null> {
+    if (body.object !== "instagram") return null;
 
     for (const entry of body.entry) {
       const messaging = entry.messaging ?? [];
@@ -60,7 +60,7 @@ export class InstagramService {
             }
           }
 
-          await this.inboxService.createConversationFromIncomingMessage({
+          const result = await this.inboxService.createConversationFromIncomingMessage({
             channel: "instagram",
             externalId: msg.mid,
             senderExternalId: event.sender.id,
@@ -69,11 +69,13 @@ export class InstagramService {
             mediaType,
             rawPayload: { event, pageId: entry.id },
           });
+          return result;
         } catch (err) {
           logger.error({ err, msgId: event.message?.mid }, "Error processing Instagram message");
         }
       }
     }
+    return null;
   }
 
   async sendInstagramDirectMessage(

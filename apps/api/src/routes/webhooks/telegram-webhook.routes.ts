@@ -1,12 +1,16 @@
 import { Hono } from "hono";
+import { eq } from "drizzle-orm";
 import { TelegramService } from "../../services/channels/TelegramService.js";
 import type { ChannelLookupService } from "../../services/ChannelLookupService.js";
+import { channelCredentials } from "@apex-ia/database/schema/tenant";
+import { emitNewMessage } from "../../socket/socketServer.js";
 import type { SocketIOInstance } from "../../socket/socketServer.js";
 import { logger } from "../../utils/logger.js";
+import { decryptCredentials } from "../../utils/encryption.js";
 
 export function createTelegramWebhookRoutes(
   channelLookup: ChannelLookupService,
-  _io: SocketIOInstance
+  io: SocketIOInstance
 ) {
   const webhookRoutes = new Hono();
 
@@ -28,13 +32,38 @@ export function createTelegramWebhookRoutes(
       return c.json({ status: "ok" }, 200);
     }
 
-    const { inboxService } = await channelLookup.createServicesForTenant(tenant.organizationId);
+    const { inboxService, tenantDb } = await channelLookup.createServicesForTenant(
+      tenant.organizationId
+    );
     const telegramService = new TelegramService(inboxService);
 
-    const botToken = process.env["TELEGRAM_BOT_TOKEN"];
-    if (botToken) await telegramService.initializeTelegramBot(botToken);
+    // Query botToken from channel_credentials
+    const credRows = await tenantDb
+      .select()
+      .from(channelCredentials)
+      .where(eq(channelCredentials.channelType, "telegram"))
+      .limit(1);
 
-    await telegramService.handleIncomingTelegramUpdate(body);
+    if (credRows[0]) {
+      try {
+        const decrypted = decryptCredentials(credRows[0].encryptedCredentials);
+        const credentials = JSON.parse(decrypted) as { botToken?: string };
+        if (credentials.botToken) {
+          await telegramService.initializeTelegramBot(credentials.botToken);
+        }
+      } catch (err) {
+        logger.warn({ err }, "Failed to decrypt or parse Telegram credentials");
+      }
+    } else {
+      logger.warn("No active Telegram credentials found in database");
+    }
+
+    const result = await telegramService.handleIncomingTelegramUpdate(body);
+
+    // Emit Socket.IO message if result exists
+    if (result) {
+      emitNewMessage(io, result.conversationId, tenant.organizationSlug, result.message);
+    }
 
     return c.json({ status: "ok" }, 200);
   });

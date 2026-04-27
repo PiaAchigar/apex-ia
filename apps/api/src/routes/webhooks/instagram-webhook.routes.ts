@@ -2,11 +2,12 @@ import { Hono } from "hono";
 import { InstagramService } from "../../services/channels/InstagramService.js";
 import type { ChannelLookupService } from "../../services/ChannelLookupService.js";
 import type { SocketIOInstance } from "../../socket/socketServer.js";
+import { emitNewMessage } from "../../socket/socketServer.js";
 import { logger } from "../../utils/logger.js";
 
 export function createInstagramWebhookRoutes(
   channelLookup: ChannelLookupService,
-  _io: SocketIOInstance
+  io: SocketIOInstance
 ) {
   const webhookRoutes = new Hono();
 
@@ -49,7 +50,10 @@ export function createInstagramWebhookRoutes(
       const igService = new InstagramService(inboxService);
 
       try {
-        await igService.handleIncomingInstagramWebhook(body);
+        const result = await igService.handleIncomingInstagramWebhook(body);
+        if (result) {
+          emitNewMessage(io, result.conversationId, tenant.organizationSlug, result.message);
+        }
       } catch (err) {
         logger.error({ err, pageId }, "Error processing Instagram webhook");
       }

@@ -2,9 +2,11 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { ConversationService } from "../services/ConversationService.js";
+import { ChannelDispatcherService } from "../services/ChannelDispatcherService.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { tenantMiddleware } from "../middleware/tenantMiddleware.js";
 import { emitNewMessage } from "../socket/socketServer.js";
+import { logger } from "../utils/logger.js";
 import type { SocketIOInstance } from "../socket/socketServer.js";
 
 const paginationSchema = z.object({
@@ -47,12 +49,27 @@ export function createConversationRoutes(io: SocketIOInstance) {
       const orgSlug = c.get("orgSlug");
 
       const conversationService = new ConversationService(tenantDb);
-      const message = await conversationService.sendOutgoingMessageToChannel(
+      const result = await conversationService.sendOutgoingMessageToChannel(
         conversationId,
         content,
         auth.userId
       );
 
+      const { message, channel, contactId } = result;
+
+      // Dispatch message to external channel API
+      try {
+        const dispatcher = new ChannelDispatcherService(tenantDb, io);
+        await dispatcher.dispatch(channel, contactId, content);
+      } catch (err) {
+        logger.error(
+          { err, conversationId, channel, contactId },
+          "Failed to dispatch message to external channel"
+        );
+        // Don't block Socket.IO emit or response if dispatch fails
+      }
+
+      // Emit real-time update to connected clients
       emitNewMessage(io, conversationId, orgSlug, message);
 
       return c.json({ success: true, data: message }, 201);

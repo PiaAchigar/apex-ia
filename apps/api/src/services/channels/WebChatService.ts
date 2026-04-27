@@ -1,4 +1,5 @@
 import type { InboxService } from "../InboxService.js";
+import type { SocketIOInstance } from "../../socket/socketServer.js";
 import { logger } from "../../utils/logger.js";
 
 type WebChatSession = {
@@ -45,8 +46,17 @@ export class WebChatService {
     }
   }
 
-  async sendWebChatMessage(sessionId: string, text: string): Promise<void> {
-    logger.info({ sessionId, text: text.slice(0, 50) }, "WebChat message queued for delivery");
+  async sendWebChatMessage(
+    sessionId: string,
+    text: string,
+    io: SocketIOInstance
+  ): Promise<void> {
+    io.to(`webchat:${sessionId}`).emit("agent_message", {
+      content: text,
+      timestamp: new Date(),
+      type: "agent",
+    });
+    logger.debug({ sessionId }, "WebChat agent message emitted");
   }
 
   getEmbedScript(orgSlug: string, apiUrl: string): string {

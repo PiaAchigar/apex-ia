@@ -63,7 +63,11 @@ export class ConversationService {
       "Outgoing message sent"
     );
 
-    return newMessage;
+    return {
+      message: newMessage,
+      channel: conversation[0].channel as "whatsapp" | "instagram" | "facebook" | "telegram" | "webchat",
+      contactId: conversation[0].contactId,
+    };
   }
 
   async getMessagesForConversation(

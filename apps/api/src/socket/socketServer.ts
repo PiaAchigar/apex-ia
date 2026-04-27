@@ -19,31 +19,42 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
       socket.handshake.auth["token"] as string | undefined ??
       (socket.handshake.headers["authorization"] as string | undefined)?.slice(7);
 
-    if (!token) {
+    // WebChat sessions are allowed without authentication
+    const isWebChatSession = socket.handshake.auth["sessionId"] ||
+                             Object.keys(socket.handshake.query).includes("sessionId");
+
+    if (!token && !isWebChatSession) {
       return next(new Error("UNAUTHORIZED: No token provided"));
     }
 
-    const supabaseUrl = process.env["SUPABASE_URL"];
-    const supabaseAnonKey = process.env["SUPABASE_ANON_KEY"];
+    if (token) {
+      const supabaseUrl = process.env["SUPABASE_URL"];
+      const supabaseAnonKey = process.env["SUPABASE_ANON_KEY"];
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      return next(new Error("Server misconfiguration"));
+      if (!supabaseUrl || !supabaseAnonKey) {
+        return next(new Error("Server misconfiguration"));
+      }
+
+      const supabase = createClient(supabaseUrl, supabaseAnonKey);
+      const { data: { user }, error } = await supabase.auth.getUser(token);
+
+      if (error || !user) {
+        return next(new Error("UNAUTHORIZED: Invalid token"));
+      }
+
+      socket.data["userId"] = user.id;
+    } else if (isWebChatSession) {
+      socket.data["sessionId"] =
+        socket.handshake.auth["sessionId"] || socket.handshake.query["sessionId"];
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-
-    if (error || !user) {
-      return next(new Error("UNAUTHORIZED: Invalid token"));
-    }
-
-    socket.data["userId"] = user.id;
     next();
   });
 
   io.on("connection", (socket) => {
-    const userId = socket.data["userId"] as string;
-    logger.debug({ socketId: socket.id, userId }, "Socket connected");
+    const userId = socket.data["userId"] as string | undefined;
+    const sessionId = socket.data["sessionId"] as string | undefined;
+    logger.debug({ socketId: socket.id, userId, sessionId }, "Socket connected");
 
     socket.on("join_conversation", (conversationId: string) => {
       socket.join(`conv_${conversationId}`);
@@ -58,7 +69,13 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
       socket.join(`org_${orgSlug}`);
     });
 
+    socket.on("join_webchat", (data: { sessionId: string; org: string }) => {
+      socket.join(`webchat:${data.sessionId}`);
+      logger.debug({ socketId: socket.id, sessionId: data.sessionId, org: data.org }, "Joined webchat room");
+    });
+
     socket.on("start_typing", (data: { conversationId: string }) => {
+      if (!userId) return;
       socket.to(`conv_${data.conversationId}`).emit("agent_typing", {
         conversationId: data.conversationId,
         agentId: userId,
@@ -67,6 +84,7 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
     });
 
     socket.on("stop_typing", (data: { conversationId: string }) => {
+      if (!userId) return;
       socket.to(`conv_${data.conversationId}`).emit("agent_typing", {
         conversationId: data.conversationId,
         agentId: userId,
@@ -75,7 +93,7 @@ export function createSocketServer(httpServer: HttpServer): SocketIOServer {
     });
 
     socket.on("disconnect", (reason) => {
-      logger.debug({ socketId: socket.id, userId, reason }, "Socket disconnected");
+      logger.debug({ socketId: socket.id, userId, sessionId, reason }, "Socket disconnected");
     });
   });
 

@@ -2,11 +2,12 @@ import { Hono } from "hono";
 import { FacebookMessengerService } from "../../services/channels/FacebookMessengerService.js";
 import type { ChannelLookupService } from "../../services/ChannelLookupService.js";
 import type { SocketIOInstance } from "../../socket/socketServer.js";
+import { emitNewMessage } from "../../socket/socketServer.js";
 import { logger } from "../../utils/logger.js";
 
 export function createFacebookMessengerWebhookRoutes(
   channelLookup: ChannelLookupService,
-  _io: SocketIOInstance
+  io: SocketIOInstance
 ) {
   const webhookRoutes = new Hono();
 
@@ -49,7 +50,10 @@ export function createFacebookMessengerWebhookRoutes(
       const fbService = new FacebookMessengerService(inboxService);
 
       try {
-        await fbService.handleIncomingMessengerWebhook(body);
+        const result = await fbService.handleIncomingMessengerWebhook(body);
+        if (result) {
+          emitNewMessage(io, result.conversationId, tenant.organizationSlug, result.message);
+        }
       } catch (err) {
         logger.error({ err, pageId }, "Error processing Messenger webhook");
       }
