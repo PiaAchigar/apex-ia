@@ -1,0 +1,27 @@
+{
+  "name": "@apex-ia/database",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/public": "./src/schema/public/index.ts",
+    "./schema/tenant": "./src/schema/tenant/index.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:push": "drizzle-kit push",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.3",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.29.1",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2"
+  }
+}

@@ -1,0 +1,23 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: apex-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # BullMQ worker — solo en desarrollo local cuando no usás Upstash
+  # El worker real se levanta con: pnpm dev --filter api
+  # Este servicio es solo para tener Redis disponible localmente.
+
+volumes:
+  redis_data:
+    driver: local
