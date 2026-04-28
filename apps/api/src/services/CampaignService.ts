@@ -85,7 +85,7 @@ export class CampaignService {
     return campaign;
   }
 
-  async scheduleCampaign(id: string, orgSlug: string, scheduledAt: Date) {
+  async scheduleCampaign(id: string, organizationId: string, scheduledAt: Date) {
     const existing = await this.tenantDb
       .select({ id: campaigns.id, status: campaigns.status })
       .from(campaigns)
@@ -110,7 +110,7 @@ export class CampaignService {
       const delayMs = scheduledAt.getTime() - Date.now();
       await this.campaignQueue.add(
         "process-campaign",
-        { campaignId: id, orgSlug },
+        { campaignId: id, organizationId },
         { delay: delayMs > 0 ? delayMs : 0 }
       );
     }

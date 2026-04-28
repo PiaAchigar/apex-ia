@@ -101,7 +101,7 @@ export function createCampaignsRoutes() {
       try {
         const updated = await service.scheduleCampaign(
           campaignId,
-          auth.organizationSlug,
+          auth.organizationId,
           scheduledAt
         );
         return c.json({ success: true, data: updated });

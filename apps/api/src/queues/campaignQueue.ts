@@ -2,7 +2,7 @@ import { Queue } from "bullmq";
 
 export type CampaignJobData = {
   campaignId: string;
-  orgSlug: string;
+  organizationId: string;
 };
 
 export type CampaignQueue = Pick<Queue<CampaignJobData>, "add">;

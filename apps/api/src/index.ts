@@ -22,10 +22,14 @@ import { createTasksRoutes } from "./routes/tasks.routes.js";
 import { createFlowBuilderRoutes } from "./routes/flow-builder.routes.js";
 import { createCampaignsRoutes } from "./routes/campaigns.routes.js";
 import { createBillingRoutes } from "./routes/billing.routes.js";
+import { createChannelsRoutes } from "./routes/channels.routes.js";
+import { createCustomFieldsRoutes } from "./routes/custom-fields.routes.js";
+import { createAutomationsRoutes } from "./routes/automations.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
 import { schedulePlanDowngradeCron } from "./jobs/plan-downgrade.job.js";
+import { startCampaignWorker } from "./queues/campaignWorker.js";
 import { logger } from "./utils/logger.js";
 
 const app = new Hono();
@@ -62,6 +66,7 @@ app.use("/tasks/*", checkSetupStatusMiddleware);
 app.use("/flows/*", checkSetupStatusMiddleware);
 app.use("/campaigns/*", checkSetupStatusMiddleware);
 app.use("/billing/*", checkSetupStatusMiddleware);
+app.use("/settings/*", checkSetupStatusMiddleware);
 
 const port = parseInt(process.env["PORT"] ?? "3001");
 
@@ -83,6 +88,15 @@ try {
   logger.error(err, "Failed to start plan downgrade cron");
 }
 
+if (process.env["REDIS_URL"]) {
+  try {
+    startCampaignWorker();
+    logger.info("Campaign BullMQ worker started");
+  } catch (err) {
+    logger.error(err, "Failed to start campaign worker");
+  }
+}
+
 app.route("/inbox", createInboxRoutes(io));
 app.route("/conversations", createConversationRoutes(io));
 app.route("/webhooks/whatsapp", createWhatsAppCloudWebhookRoutes(channelLookup, io));
@@ -97,6 +111,9 @@ app.route("/tasks", createTasksRoutes());
 app.route("/flows", createFlowBuilderRoutes());
 app.route("/campaigns", createCampaignsRoutes());
 app.route("/billing", createBillingRoutes());
+app.route("/settings/channels", createChannelsRoutes(io));
+app.route("/settings/custom-fields", createCustomFieldsRoutes());
+app.route("/settings/automations", createAutomationsRoutes());
 
 export { io };
 export default app;
