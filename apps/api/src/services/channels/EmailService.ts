@@ -14,9 +14,9 @@ export type SmtpConfig = {
 
 export class EmailService {
   private transporter: nodemailer.Transporter | null = null;
-  private tenantDb?: DrizzleDb;
+  private tenantDb: DrizzleDb | undefined;
 
-  constructor(tenantDb?: DrizzleDb) {
+  constructor(tenantDb: DrizzleDb | undefined = undefined) {
     this.tenantDb = tenantDb;
     this.initializeTransporter();
   }
@@ -115,9 +115,9 @@ export class EmailService {
 
       // TODO: Save encrypted config to channel_credentials table
       // This requires implementing credential encryption first
-      logger.info("SMTP configuration updated", { host: config.host });
+      logger.info({ host: config.host }, "SMTP configuration updated");
     } catch (error) {
-      logger.error("Error configuring SMTP", { error });
+      logger.error({ error }, "Error configuring SMTP");
       throw error;
     }
   }
@@ -140,7 +140,7 @@ export class EmailService {
       return { success: true };
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Connection failed";
-      logger.error("SMTP connection test failed", { error: errorMsg, host: config.host });
+      logger.error({ error: errorMsg, host: config.host }, "SMTP connection test failed");
       return { success: false, error: errorMsg };
     }
   }
@@ -221,7 +221,7 @@ export class EmailService {
         messageId: message!.id,
       };
     } catch (error) {
-      logger.error("Error handling incoming email", { error, from: rawEmail.from });
+      logger.error({ error, from: rawEmail.from }, "Error handling incoming email");
       return null;
     }
   }
