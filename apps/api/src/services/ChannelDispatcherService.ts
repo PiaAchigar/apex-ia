@@ -5,13 +5,15 @@ import type { SocketIOInstance } from "../socket/socketServer.js";
 import { decryptCredentials } from "../utils/encryption.js";
 import { logger } from "../utils/logger.js";
 import { WhatsAppCloudApiService } from "./channels/WhatsAppCloudApiService.js";
+import { BaileysWhatsAppService } from "./channels/BaileysWhatsAppService.js";
 import { InstagramService } from "./channels/InstagramService.js";
 import { FacebookMessengerService } from "./channels/FacebookMessengerService.js";
 import { TelegramService } from "./channels/TelegramService.js";
 import { WebChatService } from "./channels/WebChatService.js";
+import { EmailService } from "./channels/EmailService.js";
 import { InboxService } from "./InboxService.js";
 
-type ChannelType = "whatsapp" | "instagram" | "facebook" | "telegram" | "webchat";
+type ChannelType = "whatsapp" | "whatsapp_qr" | "instagram" | "facebook" | "telegram" | "webchat" | "email";
 
 type ChannelCredentialsPayload = Record<string, unknown> & {
   phoneNumberId?: string;
@@ -94,6 +96,9 @@ export class ChannelDispatcherService {
         case "whatsapp":
           await this.dispatchWhatsApp(externalId, content, credentials);
           break;
+        case "whatsapp_qr":
+          await this.dispatchWhatsAppQR(externalId, content, credentials);
+          break;
         case "instagram":
           await this.dispatchInstagram(externalId, content, credentials);
           break;
@@ -102,6 +107,9 @@ export class ChannelDispatcherService {
           break;
         case "telegram":
           await this.dispatchTelegram(externalId, content, credentials);
+          break;
+        case "email":
+          await this.dispatchEmail(externalId, content);
           break;
         default:
           throw new Error(`UNSUPPORTED_CHANNEL: ${channel}`);
@@ -177,6 +185,34 @@ export class ChannelDispatcherService {
 
     const fbService = new FacebookMessengerService(new InboxService(this.tenantDb));
     await fbService.sendMessengerMessage(externalId, content, pageAccessToken);
+  }
+
+  private async dispatchWhatsAppQR(
+    externalId: string,
+    content: string,
+    credentials: ChannelCredentialsPayload
+  ): Promise<void> {
+    const { sessionId } = credentials as {
+      sessionId: string;
+    };
+
+    if (!sessionId) {
+      throw new Error("Missing sessionId in WhatsApp QR credentials");
+    }
+
+    const baileysService = new BaileysWhatsAppService(new InboxService(this.tenantDb));
+    await baileysService.sendBaileysTextMessage(sessionId, externalId, content);
+  }
+
+  private async dispatchEmail(externalId: string, content: string): Promise<void> {
+    const emailService = new EmailService();
+    // Convert HTML content to plain text for email body
+    const plainTextContent = content.replace(/<[^>]*>/g, "").trim();
+    await emailService.sendEmail(
+      externalId,
+      "Mensaje de Apex IA",
+      `<p>${plainTextContent}</p>`
+    );
   }
 
   private async dispatchTelegram(

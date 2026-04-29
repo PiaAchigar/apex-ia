@@ -4,6 +4,7 @@ import { useState } from "react";
 import { usePipelineDealsGroupedByStage } from "@/hooks/usePipelineDealsGroupedByStage";
 import { apiClient } from "@/lib/api-client";
 import { PipelineStageColumn } from "./PipelineStageColumn";
+import { PipelineDealCreateModal } from "./PipelineDealCreateModal";
 import { Columns, Plus } from "lucide-react";
 
 type PipelineBoardKanbanProps = {
@@ -29,6 +30,13 @@ function SkeletonColumn() {
 export function PipelineBoardKanban({ pipelineId }: PipelineBoardKanbanProps) {
   const { data, isLoading, isError } = usePipelineDealsGroupedByStage(pipelineId);
   const [movingDealId, setMovingDealId] = useState<string | null>(null);
+  const [addDealModal, setAddDealModal] = useState<{ open: boolean; stageId: string | null }>({
+    open: false,
+    stageId: null,
+  });
+
+  // Get org slug from sessionStorage (set during login)
+  const orgSlug = typeof window !== "undefined" ? sessionStorage.getItem("apex_org_slug") ?? "" : "";
 
   async function handleMoveDeal(dealId: string, targetStageId: string) {
     setMovingDealId(dealId);
@@ -40,8 +48,11 @@ export function PipelineBoardKanban({ pipelineId }: PipelineBoardKanbanProps) {
   }
 
   function handleAddDeal(stageId: string) {
-    // Placeholder — deal creation modal is implemented in a later phase
-    console.info("Add deal to stage:", stageId);
+    setAddDealModal({ open: true, stageId });
+  }
+
+  function handleCloseModal() {
+    setAddDealModal({ open: false, stageId: null });
   }
 
   if (isLoading) {
@@ -77,27 +88,39 @@ export function PipelineBoardKanban({ pipelineId }: PipelineBoardKanbanProps) {
   }
 
   return (
-    <div
-      className="flex gap-4 overflow-x-auto pb-6 px-6 pt-4 h-full items-start"
-      aria-label="Tablero Kanban"
-    >
-      {stages.map((stage) => (
-        <PipelineStageColumn
-          key={stage.id}
-          stage={stage}
-          onMoveDeal={handleMoveDeal}
-          onAddDeal={handleAddDeal}
-        />
-      ))}
-
-      {/* Add stage placeholder */}
-      <button
-        className="flex-shrink-0 w-64 h-12 flex items-center justify-center gap-2 border-2 border-dashed border-[#374151] rounded-xl text-sm text-gray-600 hover:text-gray-400 hover:border-[#4B5563] transition-colors"
-        aria-label="Agregar nueva etapa"
+    <>
+      <div
+        className="flex gap-4 overflow-x-auto pb-6 px-6 pt-4 h-full items-start"
+        aria-label="Tablero Kanban"
       >
-        <Plus className="w-4 h-4" aria-hidden="true" />
-        Agregar etapa
-      </button>
-    </div>
+        {stages.map((stage) => (
+          <PipelineStageColumn
+            key={stage.id}
+            stage={stage}
+            onMoveDeal={handleMoveDeal}
+            onAddDeal={handleAddDeal}
+          />
+        ))}
+
+        {/* Add stage placeholder */}
+        <button
+          className="flex-shrink-0 w-64 h-12 flex items-center justify-center gap-2 border-2 border-dashed border-[#374151] rounded-xl text-sm text-gray-600 hover:text-gray-400 hover:border-[#4B5563] transition-colors"
+          aria-label="Agregar nueva etapa"
+        >
+          <Plus className="w-4 h-4" aria-hidden="true" />
+          Agregar etapa
+        </button>
+      </div>
+
+      {/* Deal Creation Modal */}
+      {addDealModal.open && addDealModal.stageId && (
+        <PipelineDealCreateModal
+          pipelineId={pipelineId}
+          stageId={addDealModal.stageId}
+          orgSlug={orgSlug}
+          onClose={handleCloseModal}
+        />
+      )}
+    </>
   );
 }

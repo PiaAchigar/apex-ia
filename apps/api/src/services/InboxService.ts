@@ -11,9 +11,14 @@ import type {
   ChannelType,
 } from "@apex-ia/types";
 import { logger } from "../utils/logger.js";
+import { AiResponseService } from "./AiResponseService.js";
 
 export class InboxService {
-  constructor(private readonly tenantDb: DrizzleDb) {}
+  private aiService: AiResponseService;
+
+  constructor(private readonly tenantDb: DrizzleDb) {
+    this.aiService = new AiResponseService();
+  }
 
   async createConversationFromIncomingMessage(
     payload: IncomingMessagePayload
@@ -81,15 +86,34 @@ export class InboxService {
       conversationId = newConversation.id;
     }
 
+    let messageMetadata = rawPayload ?? {};
+    let finalContent = content ?? "";
+
+    if (mediaType === "audio" && mediaUrl) {
+      try {
+        const audioBuffer = await this.fetchAudioBuffer(mediaUrl);
+        const transcript = await this.aiService.transcribeAudioMessage(
+          audioBuffer,
+          "audio/webm"
+        );
+        messageMetadata = { ...messageMetadata, transcript };
+        if (!finalContent) {
+          finalContent = `[Audio message: ${transcript}]`;
+        }
+      } catch (error) {
+        logger.warn({ error, mediaUrl }, "Failed to transcribe audio, continuing without transcript");
+      }
+    }
+
     const [newMessage] = await this.tenantDb
       .insert(messages)
       .values({
         conversationId,
         senderType: "contact",
-        content: content ?? null,
+        content: finalContent || null,
         mediaUrl: mediaUrl ?? null,
         mediaType: mediaType ?? null,
-        metadataJson: rawPayload,
+        metadataJson: messageMetadata,
         isRead: false,
       })
       .returning();
@@ -97,6 +121,20 @@ export class InboxService {
     logger.info({ conversationId, channel }, "Incoming message processed");
 
     return { conversationId, contactId, message: newMessage };
+  }
+
+  private async fetchAudioBuffer(url: string): Promise<Buffer> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.statusText}`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch (error) {
+      logger.error({ error, url }, "Error fetching audio buffer");
+      throw error;
+    }
   }
 
   async getConversationsForAgent(

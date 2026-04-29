@@ -9,6 +9,10 @@ import { tenantMiddleware } from "../middleware/tenantMiddleware.js";
 import { encryptCredentials, decryptCredentials } from "../utils/encryption.js";
 import { db } from "../db/drizzle.js";
 import { logger } from "../utils/logger.js";
+import { databaseProvider } from "../db/database-provider.js";
+import { InboxService } from "../services/InboxService.js";
+import { BaileysWhatsAppService } from "../services/channels/BaileysWhatsAppService.js";
+import type { SocketIOInstance } from "../socket/socketServer.js";
 
 // Schema validation for WhatsApp Cloud API
 const whatsappCloudConnectSchema = z.object({
@@ -41,7 +45,7 @@ const webChatConnectSchema = z.object({
   widgetId: z.string().min(1, "Widget ID required"),
 });
 
-export function createChannelsRoutes() {
+export function createChannelsRoutes(io: SocketIOInstance) {
   const router = new Hono<{ Bindings: Record<string, unknown> }>();
 
   router.use("*", authMiddleware);
@@ -93,7 +97,7 @@ export function createChannelsRoutes() {
       // Validate and handle based on channel type
       switch (type.toLowerCase()) {
         case "whatsapp-cloud": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = whatsappCloudConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -151,7 +155,7 @@ export function createChannelsRoutes() {
         }
 
         case "instagram": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = instagramFacebookConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -209,7 +213,7 @@ export function createChannelsRoutes() {
         }
 
         case "facebook": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = instagramFacebookConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -267,7 +271,7 @@ export function createChannelsRoutes() {
         }
 
         case "telegram": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = telegramConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -322,7 +326,7 @@ export function createChannelsRoutes() {
         }
 
         case "email": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = emailConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -352,7 +356,7 @@ export function createChannelsRoutes() {
         }
 
         case "webchat": {
-          const input = c.req.valid("json");
+          const input = await c.req.json();
           const schema = webChatConnectSchema.safeParse(input);
           if (!schema.success) {
             return c.json(
@@ -394,7 +398,7 @@ export function createChannelsRoutes() {
         .where(eq(channelCredentials.channelType, type.toLowerCase()))
         .limit(1);
 
-      if (existing.length > 0 && existing[0].isActive) {
+      if (existing.length > 0 && existing[0]!.isActive) {
         return c.json(
           {
             success: false,
@@ -422,8 +426,8 @@ export function createChannelsRoutes() {
             encryptedCredentials,
             isActive: true,
           })
-          .where(eq(channelCredentials.id, existing[0].id));
-        channelId = existing[0].id;
+          .where(eq(channelCredentials.id, existing[0]!.id));
+        channelId = existing[0]!.id;
       } else {
         // Insert new
         const result = await tenantDb
@@ -434,7 +438,7 @@ export function createChannelsRoutes() {
             isActive: true,
           })
           .returning({ id: channelCredentials.id });
-        channelId = result[0].id;
+        channelId = result[0]!.id;
       }
 
       // UPSERT channel_index in MI Supabase (public schema)
@@ -454,7 +458,7 @@ export function createChannelsRoutes() {
         await db
           .update(channelIndex)
           .set({ isActive: true, externalIdentifier })
-          .where(eq(channelIndex.id, channelIndexResult[0].id));
+          .where(eq(channelIndex.id, channelIndexResult[0]!.id));
       } else {
         await db.insert(channelIndex).values({
           organizationId,
@@ -521,7 +525,7 @@ export function createChannelsRoutes() {
       await tenantDb
         .update(channelCredentials)
         .set({ isActive: false })
-        .where(eq(channelCredentials.id, existing[0].id));
+        .where(eq(channelCredentials.id, existing[0]!.id));
 
       // Update channel_index in MI Supabase
       const channelIndexResult = await db
@@ -539,7 +543,7 @@ export function createChannelsRoutes() {
         await db
           .update(channelIndex)
           .set({ isActive: false })
-          .where(eq(channelIndex.id, channelIndexResult[0].id));
+          .where(eq(channelIndex.id, channelIndexResult[0]!.id));
       }
 
       logger.info(
@@ -566,24 +570,81 @@ export function createChannelsRoutes() {
   // POST /settings/channels/whatsapp-qr/connect - Initiate Baileys QR flow
   router.post("/whatsapp-qr/connect", async (c) => {
     const organizationId = c.get("organizationId");
+    const organizationSlug = c.get("orgSlug");
+    const tenantDb = c.get("tenantDb");
 
     try {
-      // TODO: Implement Baileys QR session initialization
-      // This is a placeholder for Subfase 3+ implementation
-      // For now, return a structure indicating this is in progress
+      const sessionId = organizationId;
+      const inboxService = new InboxService(tenantDb);
+      const baileysService = new BaileysWhatsAppService(inboxService);
+
+      // Start Baileys session in background (non-blocking)
+      baileysService
+        .initializeWhatsAppQrSession(
+          sessionId,
+          (qr: string) => {
+            // Emit QR code to Socket.IO
+            io.to(`org_${organizationSlug}`).emit("qr_code", { qr, sessionId });
+            logger.info({ organizationId, sessionId }, "QR code generated");
+          },
+          async (phoneNumber?: string) => {
+            // Session ready - save credentials
+            logger.info({ organizationId, sessionId }, "WhatsApp QR session ready");
+            try {
+              const creds = encryptCredentials(JSON.stringify({
+                phoneNumber: phoneNumber || "unknown",
+                sessionId,
+              }));
+              await tenantDb
+                .insert(channelCredentials)
+                .values({
+                  channelType: "whatsapp_qr",
+                  encryptedCredentials: creds,
+                  isActive: true,
+                });
+
+              // Also update channel_index in MI Supabase
+              await db
+                .insert(channelIndex)
+                .values({
+                  organizationId,
+                  organizationSlug,
+                  channelType: "whatsapp_qr",
+                  externalIdentifier: sessionId,
+                  isActive: true,
+                });
+
+              io.to(`org_${organizationSlug}`).emit("whatsapp_qr_ready", {
+                sessionId,
+                phoneNumber,
+              });
+            } catch (err) {
+              logger.error(
+                { organizationId, error: (err as Error).message },
+                "Failed to save QR credentials"
+              );
+            }
+          }
+        )
+        .catch((err) => {
+          logger.error(
+            { organizationId, error: (err as Error).message },
+            "Baileys QR initialization failed"
+          );
+        });
 
       logger.info(
-        { organizationId },
-        "WhatsApp QR connect initiated (async process)"
+        { organizationId, sessionId },
+        "WhatsApp QR connect initiated"
       );
 
       return c.json(
         {
           success: true,
           data: {
-            status: "pending",
-            message: "WhatsApp QR scan initialization in progress",
-            // qrCode: "data:image/png;base64,..." (populated once ready)
+            status: "connecting",
+            sessionId,
+            message: "Waiting for QR code scan. Check your inbox for the QR code.",
           },
         },
         202
@@ -600,17 +661,37 @@ export function createChannelsRoutes() {
   // GET /settings/channels/whatsapp-qr/status - Check Baileys session status
   router.get("/whatsapp-qr/status", async (c) => {
     const organizationId = c.get("organizationId");
+    const tenantDb = c.get("tenantDb");
 
     try {
-      // TODO: Check session state from cache/store
-      // This is a placeholder for Subfase 3+ implementation
+      const sessionId = organizationId;
+      const baileysService = new BaileysWhatsAppService({} as never); // Dummy to get status
+
+      const status = baileysService.getSessionStatus(sessionId);
+
+      // Also check if credentials exist in DB
+      const existingCreds = await tenantDb
+        .select()
+        .from(channelCredentials)
+        .where(
+          and(
+            eq(channelCredentials.channelType, "whatsapp_qr"),
+            eq(channelCredentials.isActive, true)
+          )
+        )
+        .limit(1);
+
+      const hasCredentials = existingCreds.length > 0;
 
       return c.json({
         success: true,
         data: {
-          status: "pending",
-          message: "Awaiting QR code scan",
-          // qrCode: "data:image/png;base64,..." (if available)
+          status: hasCredentials ? "ready" : status,
+          sessionId,
+          message: hasCredentials
+            ? "WhatsApp QR session active"
+            : "Awaiting QR code scan",
+          hasCredentials,
         },
       });
     } catch (error) {
@@ -621,6 +702,64 @@ export function createChannelsRoutes() {
       throw error;
     }
   });
+
+  // Email SMTP Configuration
+  const smtpConfigSchema = z.object({
+    host: z.string().min(1, "Host required"),
+    port: z.number().int().min(1),
+    user: z.string().email(),
+    pass: z.string().min(1),
+    fromName: z.string().min(1),
+  });
+
+  router.post(
+    "/email/configure",
+    authMiddleware,
+    tenantMiddleware,
+    zValidator("json", smtpConfigSchema),
+    async (c) => {
+      try {
+        const tenantDb = c.get("tenantDb");
+        const config = c.req.valid("json");
+
+        const { EmailService } = await import("../services/channels/EmailService.js");
+        const service = new EmailService(tenantDb);
+
+        await service.configureSmtp(config);
+        return c.json({ success: true, message: "SMTP configured" }, 200);
+      } catch (error) {
+        logger.error({ error }, "Error configuring SMTP");
+        return c.json(
+          { success: false, error: "Failed to configure SMTP" },
+          400
+        );
+      }
+    }
+  );
+
+  router.post(
+    "/email/test",
+    authMiddleware,
+    tenantMiddleware,
+    zValidator("json", smtpConfigSchema),
+    async (c) => {
+      try {
+        const config = c.req.valid("json");
+
+        const { EmailService } = await import("../services/channels/EmailService.js");
+        const service = new EmailService();
+
+        const result = await service.testSmtpConnection(config);
+        return c.json({ success: result.success, error: result.error }, 200);
+      } catch (error) {
+        logger.error({ error }, "Error testing SMTP");
+        return c.json(
+          { success: false, error: "Test failed" },
+          400
+        );
+      }
+    }
+  );
 
   return router;
 }

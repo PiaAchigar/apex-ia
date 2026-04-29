@@ -1,19 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PipelineBoardKanban } from "@/components/pipeline/PipelineBoardKanban";
-import { ChevronDown } from "lucide-react";
-
-// Hardcoded pipeline list — replaced with dynamic fetch in a later phase
-const DEFAULT_PIPELINES = [
-  { id: "default", name: "Pipeline de ventas" },
-];
+import { usePipelines } from "@/hooks/usePipelines";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 export default function PipelinePage() {
-  const [selectedPipelineId, setSelectedPipelineId] = useState(DEFAULT_PIPELINES[0]!.id);
+  const { data: pipelines, isLoading, isError } = usePipelines();
+  const [selectedPipelineId, setSelectedPipelineId] = useState<string>("");
 
-  const selectedPipeline =
-    DEFAULT_PIPELINES.find((p) => p.id === selectedPipelineId) ?? DEFAULT_PIPELINES[0]!;
+  // Set the first pipeline as selected when pipelines load
+  useEffect(() => {
+    if (pipelines && pipelines.length > 0 && !selectedPipelineId) {
+      setSelectedPipelineId(pipelines[0]!.id);
+    }
+  }, [pipelines, selectedPipelineId]);
+
+  const selectedPipeline = pipelines?.find((p) => p.id === selectedPipelineId) ?? pipelines?.[0];
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-full text-red-400">
+        Error cargando pipelines
+      </div>
+    );
+  }
+
+  if (isLoading || !pipelines || pipelines.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full gap-2 text-gray-400">
+        <Loader2 size={20} className="animate-spin" />
+        Cargando pipelines...
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-[#111827]">
@@ -29,7 +49,7 @@ export default function PipelinePage() {
             className="appearance-none bg-[#1F2937] border border-[#374151] text-sm text-gray-300 rounded-lg pl-3 pr-8 py-1.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             aria-label="Seleccionar pipeline"
           >
-            {DEFAULT_PIPELINES.map((p) => (
+            {pipelines.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
@@ -44,7 +64,7 @@ export default function PipelinePage() {
 
       {/* Kanban board */}
       <div className="flex-1 overflow-hidden">
-        <PipelineBoardKanban pipelineId={selectedPipelineId} />
+        {selectedPipelineId && <PipelineBoardKanban pipelineId={selectedPipelineId} />}
       </div>
     </div>
   );

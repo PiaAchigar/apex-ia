@@ -8,7 +8,7 @@ Lee estos archivos antes de codear:
 - Arquitectura dual-database: docs/ARCHITECTURE-CHANGES.md  ← LEER SIEMPRE
 - Convenciones de nombres: docs/conventions.md
 - Testing: docs/testing.md
-- Fase actual: docs/fases/fase-1.md  ← cambiás esto al avanzar
+- Fase actual: docs/fases/fase-4.md  ← cambiás esto al avanzar
 
 ---
 
@@ -356,10 +356,10 @@ Patrones UI: sidebar colapsable izquierdo fijo, topbar con búsqueda global, KPI
 ### STARTER — $0/mes (Forever Free)
 1 team member · 3 flows · 2 canales · 500 conversaciones/mes · Inbox + Pipeline básico · 5 templates · Branding "Powered by Apex IA"
 
-### GROWTH — $49/mes
+### GROWTH — $49000/mes
 5 team members · Flows ilimitados · 10 canales · Conversaciones ilimitadas · Analytics + Reports · Campaigns (5.000/mes) · Whisper audio · Sin branding · API Access · Calendar integrations
 
-### BUSINESS — $149/mes
+### BUSINESS — $149000/mes
 Todo Growth + team members ilimitados · Múltiples pipelines · AI Credentials propias · Custom CSS/JS · Inbox Embedding · Backup & Restore · Roles avanzados · Volume Heatmap + CSAT · SLA reports · Soporte prioritario · White-label disponible
 
 --- 

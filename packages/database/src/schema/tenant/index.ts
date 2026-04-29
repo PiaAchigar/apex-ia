@@ -8,6 +8,7 @@ export * from "./campaigns.js";
 export * from "./templates.js";
 export * from "./channel-credentials.js";
 export * from "./call-logs.js";
+export * from "./calendar-events.js";
 export * from "./analytics-events.js";
 export * from "./custom-fields.js";
 export * from "./n8n-workflows.js";

@@ -130,7 +130,7 @@ export function AppSidebar({ slug }: AppSidebarProps) {
       {/* Bottom section */}
       <div className="flex-shrink-0 border-t border-[#374151] px-2 py-3 flex flex-col gap-0.5">
         <Link
-          href={`/${slug}/settings/channels`}
+          href={`/${slug}/settings`}
           aria-label={isSidebarCollapsed ? "Configuración" : undefined}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-400 hover:text-gray-200 hover:bg-[#374151]/60 transition-all duration-150 group border border-transparent"
         >

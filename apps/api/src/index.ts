@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { requestLoggerMiddleware } from "./middleware/requestLoggerMiddleware.js";
@@ -15,6 +16,8 @@ import { createInstagramWebhookRoutes } from "./routes/webhooks/instagram-webhoo
 import { createFacebookMessengerWebhookRoutes } from "./routes/webhooks/facebook-messenger-webhook.routes.js";
 import { createTelegramWebhookRoutes } from "./routes/webhooks/telegram-webhook.routes.js";
 import { createMercadoPagoWebhookRoutes } from "./routes/webhooks/mercadopago.routes.js";
+import { createEmailWebhookRoutes } from "./routes/webhooks/email-webhook.routes.js";
+import { createTikTokWebhookRoutes } from "./routes/webhooks/tiktok-webhook.routes.js";
 import { createWebChatRoutes } from "./routes/webchat.routes.js";
 import { createContactsRoutes } from "./routes/contacts.routes.js";
 import { createPipelineRoutes } from "./routes/pipeline.routes.js";
@@ -25,6 +28,8 @@ import { createBillingRoutes } from "./routes/billing.routes.js";
 import { createChannelsRoutes } from "./routes/channels.routes.js";
 import { createCustomFieldsRoutes } from "./routes/custom-fields.routes.js";
 import { createAutomationsRoutes } from "./routes/automations.routes.js";
+import { createCalendarRoutes } from "./routes/calendar.routes.js";
+import { createCallLogsRoutes } from "./routes/call-logs.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
@@ -65,6 +70,8 @@ app.use("/pipeline/*", checkSetupStatusMiddleware);
 app.use("/tasks/*", checkSetupStatusMiddleware);
 app.use("/flows/*", checkSetupStatusMiddleware);
 app.use("/campaigns/*", checkSetupStatusMiddleware);
+app.use("/calendar/*", checkSetupStatusMiddleware);
+app.use("/call-logs/*", checkSetupStatusMiddleware);
 app.use("/billing/*", checkSetupStatusMiddleware);
 app.use("/settings/*", checkSetupStatusMiddleware);
 
@@ -104,12 +111,16 @@ app.route("/webhooks/instagram", createInstagramWebhookRoutes(channelLookup, io)
 app.route("/webhooks/facebook", createFacebookMessengerWebhookRoutes(channelLookup, io));
 app.route("/webhooks/telegram", createTelegramWebhookRoutes(channelLookup, io));
 app.route("/webhooks/mercadopago", createMercadoPagoWebhookRoutes());
+app.route("/webhooks/email", createEmailWebhookRoutes(channelLookup, io));
+app.route("/webhooks/tiktok", createTikTokWebhookRoutes(channelLookup, io));
 app.route("/webchat", createWebChatRoutes(channelLookup, io));
 app.route("/contacts", createContactsRoutes());
 app.route("/pipeline", createPipelineRoutes());
 app.route("/tasks", createTasksRoutes());
 app.route("/flows", createFlowBuilderRoutes());
 app.route("/campaigns", createCampaignsRoutes());
+app.route("/calendar", createCalendarRoutes());
+app.route("/call-logs", createCallLogsRoutes());
 app.route("/billing", createBillingRoutes());
 app.route("/settings/channels", createChannelsRoutes(io));
 app.route("/settings/custom-fields", createCustomFieldsRoutes());
