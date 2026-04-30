@@ -33,6 +33,7 @@ import { createCallLogsRoutes } from "./routes/call-logs.routes.js";
 import { createAnalyticsRoutes } from "./routes/analytics.routes.js";
 import { createAiCredentialsRoutes } from "./routes/ai-credentials.routes.js";
 import { createTeamRoutes } from "./routes/settings/team.routes.js";
+import { createApiKeyRoutes } from "./routes/settings/api-keys.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
@@ -132,6 +133,7 @@ app.route("/settings/channels", createChannelsRoutes(io));
 app.route("/settings/custom-fields", createCustomFieldsRoutes());
 app.route("/settings/automations", createAutomationsRoutes());
 app.route("/settings/team", createTeamRoutes());
+app.route("/settings/api-keys", createApiKeyRoutes());
 
 export { io };
 export default app;

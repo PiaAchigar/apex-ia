@@ -5,14 +5,15 @@ import { users, organizations, roles } from "@apex-ia/database/schema/public";
 import { eq } from "drizzle-orm";
 import { logger } from "../utils/logger.js";
 import type { PermissionsJson } from "@apex-ia/database/schema/public";
+import { ApiKeyService } from "../services/ApiKeyService.js";
 
 type AuthContext = {
-  userId: string;
+  userId: string | null;
   organizationId: string;
-  organizationSlug: string;
-  roleId: string;
+  organizationSlug?: string;
+  roleId?: string;
   roleName: string;
-  permissions: PermissionsJson;
+  permissions: PermissionsJson | {};
 };
 
 declare module "hono" {
@@ -22,6 +23,39 @@ declare module "hono" {
 }
 
 export const authMiddleware: MiddlewareHandler = async (c, next) => {
+  // Check X-Api-Key header first
+  const apiKeyHeader = c.req.header("X-Api-Key");
+  if (apiKeyHeader) {
+    try {
+      const apiKeyService = new ApiKeyService();
+      const result = await apiKeyService.validateApiKey(apiKeyHeader);
+
+      if (!result) {
+        return c.json(
+          { success: false, error: { code: "UNAUTHORIZED", message: "API key inválida" } },
+          401
+        );
+      }
+
+      c.set("auth", {
+        userId: null,
+        organizationId: result.organizationId,
+        roleName: "api_key",
+        permissions: {},
+      });
+
+      await next();
+      return;
+    } catch (error) {
+      logger.error({ error }, "API key validation failed");
+      return c.json(
+        { success: false, error: { code: "UNAUTHORIZED", message: "Error validando API key" } },
+        401
+      );
+    }
+  }
+
+  // Fallback to Bearer token
   const authHeader = c.req.header("Authorization");
 
   if (!authHeader?.startsWith("Bearer ")) {
