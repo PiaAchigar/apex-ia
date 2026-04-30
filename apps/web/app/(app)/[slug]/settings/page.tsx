@@ -60,7 +60,6 @@ export default function SettingsPage() {
       description: "Invita miembros, asigna roles y permisos",
       href: `/settings/team`,
       icon: Users,
-      comingSoon: true,
     },
     {
       label: "Facturación",
@@ -74,7 +73,6 @@ export default function SettingsPage() {
       description: "Genera y revoca API keys, estadísticas de uso",
       href: `/settings/api-access`,
       icon: Key,
-      comingSoon: true,
     },
     {
       label: "Generales",
