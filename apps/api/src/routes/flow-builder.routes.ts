@@ -46,13 +46,15 @@ export function createFlowBuilderRoutes() {
 
   routes.get("/", async (c) => {
     const tenantDb = c.get("tenantDb");
-    const service = new FlowBuilderService(tenantDb);
+    const organizationId = c.get("organizationId");
+    const service = new FlowBuilderService(tenantDb, organizationId);
     const flowList = await service.getFlows();
     return c.json({ success: true, data: flowList });
   });
 
   routes.post("/", zValidator("json", createFlowSchema), async (c) => {
     const tenantDb = c.get("tenantDb");
+    const organizationId = c.get("organizationId");
     const input = c.req.valid("json");
 
     const dangerousPattern = scanNodesForDangerousCode(input.nodes)
@@ -63,7 +65,7 @@ export function createFlowBuilderRoutes() {
       )
     }
 
-    const service = new FlowBuilderService(tenantDb);
+    const service = new FlowBuilderService(tenantDb, organizationId);
     const created = await service.createFlow(input);
     return c.json({ success: true, data: created }, 201);
   });
@@ -71,7 +73,8 @@ export function createFlowBuilderRoutes() {
   routes.get("/:flowId", async (c) => {
     const { flowId } = c.req.param();
     const tenantDb = c.get("tenantDb");
-    const service = new FlowBuilderService(tenantDb);
+    const organizationId = c.get("organizationId");
+    const service = new FlowBuilderService(tenantDb, organizationId);
     try {
       const flow = await service.getFlowById(flowId);
       return c.json({ success: true, data: flow });
@@ -89,6 +92,7 @@ export function createFlowBuilderRoutes() {
   routes.patch("/:flowId", zValidator("json", updateFlowSchema), async (c) => {
     const { flowId } = c.req.param();
     const tenantDb = c.get("tenantDb");
+    const organizationId = c.get("organizationId");
     const input = c.req.valid("json");
 
     if (input.nodes) {
@@ -101,7 +105,7 @@ export function createFlowBuilderRoutes() {
       }
     }
 
-    const service = new FlowBuilderService(tenantDb);
+    const service = new FlowBuilderService(tenantDb, organizationId);
     try {
       const updated = await service.updateFlow(flowId, input);
       return c.json({ success: true, data: updated });
@@ -119,7 +123,8 @@ export function createFlowBuilderRoutes() {
   routes.delete("/:flowId", async (c) => {
     const { flowId } = c.req.param();
     const tenantDb = c.get("tenantDb");
-    const service = new FlowBuilderService(tenantDb);
+    const organizationId = c.get("organizationId");
+    const service = new FlowBuilderService(tenantDb, organizationId);
     try {
       await service.deleteFlow(flowId);
       return c.json({ success: true, data: { flowId } });
@@ -137,7 +142,8 @@ export function createFlowBuilderRoutes() {
   routes.post("/:flowId/activate", async (c) => {
     const { flowId } = c.req.param();
     const tenantDb = c.get("tenantDb");
-    const service = new FlowBuilderService(tenantDb);
+    const organizationId = c.get("organizationId");
+    const service = new FlowBuilderService(tenantDb, organizationId);
     try {
       await service.activateFlow(flowId);
       return c.json({ success: true, data: { flowId, isActive: true } });
@@ -155,7 +161,8 @@ export function createFlowBuilderRoutes() {
   routes.post("/:flowId/deactivate", async (c) => {
     const { flowId } = c.req.param();
     const tenantDb = c.get("tenantDb");
-    const service = new FlowBuilderService(tenantDb);
+    const organizationId = c.get("organizationId");
+    const service = new FlowBuilderService(tenantDb, organizationId);
     try {
       await service.deactivateFlow(flowId);
       return c.json({ success: true, data: { flowId, isActive: false } });
@@ -177,12 +184,13 @@ export function createFlowBuilderRoutes() {
       const { flowId } = c.req.param();
       const { triggerData } = c.req.valid("json");
       const tenantDb = c.get("tenantDb");
-      const service = new FlowBuilderService(tenantDb);
+      const organizationId = c.get("organizationId");
+      const service = new FlowBuilderService(tenantDb, organizationId);
       try {
         const flow = await service.getFlowById(flowId);
         const nodes = (flow.nodesJson as never[]) ?? [];
         const edges = (flow.edgesJson as never[]) ?? [];
-        const result = service.executeFlow(nodes, edges, triggerData);
+        const result = await service.executeFlow(nodes, edges, triggerData);
         return c.json({ success: true, data: result });
       } catch (err) {
         if (err instanceof Error && err.message === "FLOW_NOT_FOUND") {

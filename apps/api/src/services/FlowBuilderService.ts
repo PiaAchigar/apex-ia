@@ -1,7 +1,8 @@
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { flows } from "@apex-ia/database/schema/tenant";
 import type { DrizzleDb } from "../db/drizzle.js";
 import { logger } from "../utils/logger.js";
+import { AiResponseService } from "./AiResponseService.js";
 
 type FlowNodeData = {
   label?: string;
@@ -57,7 +58,7 @@ type UpdateFlowInput = Partial<{
 }>;
 
 export class FlowBuilderService {
-  constructor(private readonly tenantDb: DrizzleDb) {}
+  constructor(private readonly tenantDb: DrizzleDb, private readonly organizationId?: string) {}
 
   async createFlow(input: CreateFlowInput) {
     const [created] = await this.tenantDb
@@ -166,11 +167,18 @@ export class FlowBuilderService {
     logger.info({ flowId: id }, "Flow deleted");
   }
 
-  executeFlow(
+  async getActiveFlowsByTriggerType(triggerType: string) {
+    return this.tenantDb
+      .select()
+      .from(flows)
+      .where(and(eq(flows.isActive, true), eq(flows.triggerType, triggerType)));
+  }
+
+  async executeFlow(
     flowNodes: FlowNode[],
     flowEdges: FlowEdge[],
     triggerData: Record<string, unknown>
-  ): ExecutionResult {
+  ): Promise<ExecutionResult> {
     const nodeMap = new Map(flowNodes.map((n) => [n.id, n]));
     const edgesBySource = new Map<string, FlowEdge[]>();
 
@@ -188,19 +196,19 @@ export class FlowBuilderService {
     const steps: NodeExecution[] = [];
     const visited = new Set<string>();
 
-    this.traverseNode(triggerNode, nodeMap, edgesBySource, triggerData, steps, visited);
+    await this.traverseNode(triggerNode, nodeMap, edgesBySource, triggerData, steps, visited);
 
     return { steps, completed: true };
   }
 
-  private traverseNode(
+  private async traverseNode(
     node: FlowNode,
     nodeMap: Map<string, FlowNode>,
     edgesBySource: Map<string, FlowEdge[]>,
     data: Record<string, unknown>,
     steps: NodeExecution[],
     visited: Set<string>
-  ): void {
+  ): Promise<void> {
     if (visited.has(node.id)) return;
     visited.add(node.id);
 
@@ -221,7 +229,7 @@ export class FlowBuilderService {
         );
         if (matchingEdge) {
           const next = nodeMap.get(matchingEdge.target);
-          if (next) this.traverseNode(next, nodeMap, edgesBySource, data, steps, visited);
+          if (next) await this.traverseNode(next, nodeMap, edgesBySource, data, steps, visited);
         }
         return;
       }
@@ -234,9 +242,20 @@ export class FlowBuilderService {
         step.output = { delaySeconds: node.data.delaySeconds };
         break;
 
-      case "ai_response":
-        step.output = { prompt: node.data.prompt };
+      case "ai_response": {
+        const aiService = new AiResponseService(this.tenantDb, this.organizationId);
+        const systemPrompt = node.data.prompt ?? "Eres un asistente de atención al cliente.";
+        const userMessage = String(data["messageText"] ?? "");
+        try {
+          const aiResponse = await aiService.generateAiResponseWithFallback(systemPrompt, userMessage);
+          step.output = { aiResponse };
+        } catch (error) {
+          logger.warn({ error, nodeId: node.id }, "AI response generation failed");
+          step.output = { error: "AI_GENERATION_FAILED" };
+          step.status = "skipped";
+        }
         break;
+      }
 
       case "sub_flow":
         step.output = { subFlowId: node.data.subFlowId };
@@ -251,7 +270,7 @@ export class FlowBuilderService {
     const outEdges = edgesBySource.get(node.id) ?? [];
     for (const edge of outEdges) {
       const next = nodeMap.get(edge.target);
-      if (next) this.traverseNode(next, nodeMap, edgesBySource, data, steps, visited);
+      if (next) await this.traverseNode(next, nodeMap, edgesBySource, data, steps, visited);
     }
   }
 

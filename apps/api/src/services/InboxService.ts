@@ -12,12 +12,13 @@ import type {
 } from "@apex-ia/types";
 import { logger } from "../utils/logger.js";
 import { AiResponseService } from "./AiResponseService.js";
+import { FlowBuilderService } from "./FlowBuilderService.js";
 
 export class InboxService {
   private aiService: AiResponseService;
 
-  constructor(private readonly tenantDb: DrizzleDb) {
-    this.aiService = new AiResponseService();
+  constructor(private readonly tenantDb: DrizzleDb, private readonly organizationId?: string) {
+    this.aiService = new AiResponseService(tenantDb, organizationId);
   }
 
   async createConversationFromIncomingMessage(
@@ -119,6 +120,34 @@ export class InboxService {
       .returning();
 
     logger.info({ conversationId, channel }, "Incoming message processed");
+
+    if (this.organizationId) {
+      const flowService = new FlowBuilderService(this.tenantDb, this.organizationId);
+      const activeFlows = await flowService.getActiveFlowsByTriggerType("incoming_message");
+      for (const flow of activeFlows) {
+        const nodes = (flow.nodesJson as never[]) ?? [];
+        const edges = (flow.edgesJson as never[]) ?? [];
+        try {
+          const result = await flowService.executeFlow(nodes, edges, {
+            messageText: finalContent,
+            channel,
+            conversationId,
+          });
+          for (const step of result.steps) {
+            if (step.type === "ai_response" && step.status === "executed" && step.output?.["aiResponse"]) {
+              await this.tenantDb.insert(messages).values({
+                conversationId,
+                senderType: "bot",
+                content: String(step.output["aiResponse"]),
+                isRead: false,
+              });
+            }
+          }
+        } catch (error) {
+          logger.warn({ error, flowId: flow.id }, "Error executing incoming_message flow");
+        }
+      }
+    }
 
     return { conversationId, contactId, message: newMessage };
   }

@@ -67,7 +67,7 @@ describe("FlowBuilderService", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
-    service = new FlowBuilderService(mockDb as never);
+    service = new FlowBuilderService(mockDb as never, "test-org");
   });
 
   describe("createFlow", () => {
@@ -183,20 +183,20 @@ describe("FlowBuilderService", () => {
   });
 
   describe("executeFlow", () => {
-    it("debería retornar steps vacíos si no hay nodo trigger", () => {
-      const result = service.executeFlow([], [], {});
+    it("debería retornar steps vacíos si no hay nodo trigger", async () => {
+      const result = await service.executeFlow([], [], {});
       expect(result.steps).toHaveLength(0);
       expect(result.completed).toBe(false);
     });
 
-    it("debería ejecutar un flow simple trigger → send_message", () => {
+    it("debería ejecutar un flow simple trigger → send_message", async () => {
       const nodes = [
         { id: "1", type: "trigger", data: { triggerType: "new_conversation" }, position: { x: 0, y: 0 } },
         { id: "2", type: "send_message", data: { message: "Hola!" }, position: { x: 0, y: 100 } },
       ];
       const edges = [{ id: "e1-2", source: "1", target: "2" }];
 
-      const result = service.executeFlow(nodes, edges, {});
+      const result = await service.executeFlow(nodes, edges, {});
 
       expect(result.completed).toBe(true);
       expect(result.steps).toHaveLength(2);
@@ -205,7 +205,7 @@ describe("FlowBuilderService", () => {
       expect(result.steps[1]?.output).toEqual({ message: "Hola!" });
     });
 
-    it("debería seguir el handle 'true' en un nodo condition cuando la condición es verdadera", () => {
+    it("debería seguir el handle 'true' en un nodo condition cuando la condición es verdadera", async () => {
       const nodes = [
         { id: "1", type: "trigger", data: {}, position: { x: 0, y: 0 } },
         {
@@ -223,13 +223,13 @@ describe("FlowBuilderService", () => {
         { id: "e2-4", source: "2", target: "4", sourceHandle: "false" },
       ];
 
-      const result = service.executeFlow(nodes, edges, { channel: "whatsapp" });
+      const result = await service.executeFlow(nodes, edges, { channel: "whatsapp" });
 
       expect(result.steps.some((s) => s.nodeId === "3")).toBe(true);
       expect(result.steps.some((s) => s.nodeId === "4")).toBe(false);
     });
 
-    it("debería seguir el handle 'false' cuando la condición no se cumple", () => {
+    it("debería seguir el handle 'false' cuando la condición no se cumple", async () => {
       const nodes = [
         { id: "1", type: "trigger", data: {}, position: { x: 0, y: 0 } },
         {
@@ -245,19 +245,19 @@ describe("FlowBuilderService", () => {
         { id: "e2-3", source: "2", target: "3", sourceHandle: "false" },
       ];
 
-      const result = service.executeFlow(nodes, edges, { channel: "instagram" });
+      const result = await service.executeFlow(nodes, edges, { channel: "instagram" });
 
       expect(result.steps.some((s) => s.nodeId === "3")).toBe(true);
     });
 
-    it("debería incluir el nodo delay con delaySeconds en el output", () => {
+    it("debería incluir el nodo delay con delaySeconds en el output", async () => {
       const nodes = [
         { id: "1", type: "trigger", data: {}, position: { x: 0, y: 0 } },
         { id: "2", type: "delay", data: { delaySeconds: 30 }, position: { x: 0, y: 100 } },
       ];
       const edges = [{ id: "e1-2", source: "1", target: "2" }];
 
-      const result = service.executeFlow(nodes, edges, {});
+      const result = await service.executeFlow(nodes, edges, {});
 
       const delayStep = result.steps.find((s) => s.type === "delay");
       expect(delayStep?.output).toEqual({ delaySeconds: 30 });

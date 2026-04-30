@@ -31,8 +31,9 @@ export function createInboxRoutes(io: SocketIOInstance) {
       const filters = c.req.valid("query");
       const auth = c.get("auth");
       const tenantDb = c.get("tenantDb");
+      const organizationId = c.get("organizationId");
 
-      const inboxService = new InboxService(tenantDb);
+      const inboxService = new InboxService(tenantDb, organizationId);
       const conversations = await inboxService.getConversationsForAgent(
         auth.userId,
         filters
@@ -49,9 +50,10 @@ export function createInboxRoutes(io: SocketIOInstance) {
       const { conversationId } = c.req.param();
       const { agentId } = c.req.valid("json");
       const tenantDb = c.get("tenantDb");
+      const organizationId = c.get("organizationId");
       const orgSlug = c.get("orgSlug");
 
-      const inboxService = new InboxService(tenantDb);
+      const inboxService = new InboxService(tenantDb, organizationId);
       await inboxService.assignConversationToAgent(conversationId, agentId);
 
       emitConversationAssigned(io, conversationId, orgSlug, agentId);
@@ -65,9 +67,10 @@ export function createInboxRoutes(io: SocketIOInstance) {
     async (c) => {
       const { conversationId } = c.req.param();
       const tenantDb = c.get("tenantDb");
+      const organizationId = c.get("organizationId");
       const orgSlug = c.get("orgSlug");
 
-      const inboxService = new InboxService(tenantDb);
+      const inboxService = new InboxService(tenantDb, organizationId);
       await inboxService.markConversationAsResolved(conversationId);
 
       emitConversationResolved(io, conversationId, orgSlug);
@@ -81,8 +84,9 @@ export function createInboxRoutes(io: SocketIOInstance) {
     async (c) => {
       const { conversationId } = c.req.param();
       const tenantDb = c.get("tenantDb");
+      const organizationId = c.get("organizationId");
 
-      const inboxService = new InboxService(tenantDb);
+      const inboxService = new InboxService(tenantDb, organizationId);
       await inboxService.markConversationAsPending(conversationId);
 
       return c.json({ success: true, data: { conversationId, status: "pending" } });

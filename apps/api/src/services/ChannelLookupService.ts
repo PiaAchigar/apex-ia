@@ -33,7 +33,7 @@ export class ChannelLookupService {
 
   async createServicesForTenant(organizationId: string) {
     const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
-    const inboxService = new InboxService(tenantDb);
+    const inboxService = new InboxService(tenantDb, organizationId);
     const conversationService = new ConversationService(tenantDb);
     return { inboxService, conversationService, tenantDb };
   }
