@@ -246,8 +246,13 @@ export class FlowBuilderService {
         const aiService = new AiResponseService(this.tenantDb, this.organizationId);
         const systemPrompt = node.data.prompt ?? "Eres un asistente de atención al cliente.";
         const userMessage = String(data["messageText"] ?? "");
+        const preferredProvider = typeof node.data.preferredProvider === "string"
+          ? (node.data.preferredProvider as "anthropic" | "openai" | "gemini" | "openrouter")
+          : undefined;
         try {
-          const aiResponse = await aiService.generateAiResponseWithFallback(systemPrompt, userMessage);
+          const aiResponse = await aiService.generateAiResponseWithFallback(
+            systemPrompt, userMessage, preferredProvider
+          );
           step.output = { aiResponse };
         } catch (error) {
           logger.warn({ error, nodeId: node.id }, "AI response generation failed");

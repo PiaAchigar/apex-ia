@@ -11,6 +11,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useFlowBuilderState } from "@/hooks/useFlowBuilderState";
 import { FlowBuilderNodePanel } from "./FlowBuilderNodePanel";
+import { AiResponseNodeConfig } from "./AiResponseNodeConfig";
 import { TriggerNode } from "./nodes/TriggerNode";
 import { ConditionNode } from "./nodes/ConditionNode";
 import { SendMessageNode } from "./nodes/SendMessageNode";
@@ -18,7 +19,7 @@ import { DelayNode } from "./nodes/DelayNode";
 import { AiResponseNode } from "./nodes/AiResponseNode";
 import { SubFlowNode } from "./nodes/SubFlowNode";
 import { apiClient } from "@/lib/api-client";
-import { Save, Play, Power, PowerOff, Loader2 } from "lucide-react";
+import { Save, Power, PowerOff, Loader2 } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 
 const NODE_TYPES = {
@@ -54,6 +55,8 @@ export function FlowBuilderCanvas({
     onEdgesChange,
     onConnect,
     addNode,
+    updateNodeData,
+    deselectAll,
   } = useFlowBuilderState(initialNodes, initialEdges);
 
   const [saving, setSaving] = useState(false);
@@ -154,43 +157,65 @@ export function FlowBuilderCanvas({
         </div>
 
         {/* Canvas */}
-        <div className="flex-1 bg-[#111827]">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            nodeTypes={NODE_TYPES}
-            fitView
-            defaultEdgeOptions={{
-              style: { stroke: "#374151", strokeWidth: 2 },
-              animated: true,
-            }}
-          >
-            <Background
-              variant={BackgroundVariant.Dots}
-              color="#374151"
-              gap={20}
-              size={1}
-            />
-            <Controls
-              style={{
-                background: "#1F2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
+        <div className="flex-1 flex">
+          <div className="flex-1 bg-[#111827]">
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              nodeTypes={NODE_TYPES}
+              fitView
+              defaultEdgeOptions={{
+                style: { stroke: "#374151", strokeWidth: 2 },
+                animated: true,
               }}
-            />
-            <MiniMap
-              style={{
-                background: "#1F2937",
-                border: "1px solid #374151",
-                borderRadius: "8px",
-              }}
-              nodeColor="#374151"
-              maskColor="rgba(17, 24, 39, 0.7)"
-            />
-          </ReactFlow>
+            >
+              <Background
+                variant={BackgroundVariant.Dots}
+                color="#374151"
+                gap={20}
+                size={1}
+              />
+              <Controls
+                style={{
+                  background: "#1F2937",
+                  border: "1px solid #374151",
+                  borderRadius: "8px",
+                }}
+              />
+              <MiniMap
+                style={{
+                  background: "#1F2937",
+                  border: "1px solid #374151",
+                  borderRadius: "8px",
+                }}
+                nodeColor="#374151"
+                maskColor="rgba(17, 24, 39, 0.7)"
+              />
+            </ReactFlow>
+          </div>
+
+          {/* Config Panel */}
+          {(() => {
+            const selectedNode = nodes.find((n) => n.selected && n.type === "ai_response");
+            if (!selectedNode) return null;
+            return (
+              <AiResponseNodeConfig
+                nodeId={selectedNode.id}
+                nodeData={
+                  selectedNode.data as {
+                    prompt?: string;
+                    model?: string;
+                    preferredProvider?: string;
+                  }
+                }
+                onUpdate={(data) => updateNodeData(selectedNode.id, data)}
+                onClose={deselectAll}
+              />
+            );
+          })()}
         </div>
       </div>
     </div>

@@ -67,6 +67,10 @@ export function useFlowBuilderState(
     [setNodes, setEdges]
   );
 
+  const deselectAll = useCallback(() => {
+    setNodes((nds) => nds.map((n) => ({ ...n, selected: false })));
+  }, [setNodes]);
+
   return {
     nodes,
     edges,
@@ -76,5 +80,6 @@ export function useFlowBuilderState(
     addNode,
     updateNodeData,
     deleteNode,
+    deselectAll,
   };
 }
