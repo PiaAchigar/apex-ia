@@ -47,11 +47,11 @@ export function createAnalyticsRoutes() {
 
         const metrics = await analyticsService.getConversationMetrics(organizationId, dateRange);
 
-        return c.json(metrics, 200);
+        return c.json({ success: true, data: metrics }, 200);
       } catch (error) {
         logger.error({ error }, "Error fetching conversation metrics");
         return c.json(
-          { error: error instanceof Error ? error.message : "METRICS_FETCH_FAILED" },
+          { success: false, error: { code: "METRICS_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch metrics" } },
           500
         );
       }
@@ -85,11 +85,11 @@ export function createAnalyticsRoutes() {
 
         const report = await analyticsService.getAgentPerformanceReport(organizationId, dateRange);
 
-        return c.json(report, 200);
+        return c.json({ success: true, data: report }, 200);
       } catch (error) {
         logger.error({ error }, "Error fetching agent performance report");
         return c.json(
-          { error: error instanceof Error ? error.message : "AGENT_PERFORMANCE_FETCH_FAILED" },
+          { success: false, error: { code: "AGENT_PERFORMANCE_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch report" } },
           500
         );
       }
@@ -123,11 +123,11 @@ export function createAnalyticsRoutes() {
 
         const report = await analyticsService.getChannelSlaReport(organizationId, dateRange);
 
-        return c.json(report, 200);
+        return c.json({ success: true, data: report }, 200);
       } catch (error) {
         logger.error({ error }, "Error fetching channel SLA report");
         return c.json(
-          { error: error instanceof Error ? error.message : "CHANNEL_SLA_FETCH_FAILED" },
+          { success: false, error: { code: "CHANNEL_SLA_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch report" } },
           500
         );
       }
@@ -165,11 +165,11 @@ export function createAnalyticsRoutes() {
           endDate: new Date(query.endDate),
         });
 
-        return c.json(heatmap, 200);
+        return c.json({ success: true, data: heatmap }, 200);
       } catch (error) {
         logger.error({ error }, "Error fetching volume heatmap");
         return c.json(
-          { error: error instanceof Error ? error.message : "VOLUME_HEATMAP_FETCH_FAILED" },
+          { success: false, error: { code: "VOLUME_HEATMAP_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch heatmap" } },
           500
         );
       }
@@ -203,11 +203,11 @@ export function createAnalyticsRoutes() {
 
         const csatReport = await analyticsService.getCsatReport(organizationId, dateRange);
 
-        return c.json(csatReport, 200);
+        return c.json({ success: true, data: csatReport }, 200);
       } catch (error) {
         logger.error({ error }, "Error fetching CSAT report");
         return c.json(
-          { error: error instanceof Error ? error.message : "CSAT_REPORT_FETCH_FAILED" },
+          { success: false, error: { code: "CSAT_REPORT_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch report" } },
           500
         );
       }

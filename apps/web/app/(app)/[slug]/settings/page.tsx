@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Mail, MessageSquare, Zap, Users, CreditCard, Key, FileText, Settings as SettingsIcon } from "lucide-react";
+import { Mail, MessageSquare, Zap, Users, CreditCard, Key, FileText, Settings as SettingsIcon, Sparkles, BarChart3 } from "lucide-react";
 
 type SettingsCard = {
   label: string;
@@ -35,6 +35,12 @@ export default function SettingsPage() {
       description: "Typing indicators, divisor de mensajes, link preview",
       href: `/settings/whatsapp-behavior`,
       icon: MessageSquare,
+    },
+    {
+      label: "Credenciales de IA",
+      description: "Configura API keys para Anthropic, OpenAI, Gemini y más",
+      href: `/settings/ai-credentials`,
+      icon: Sparkles,
     },
     {
       label: "Campos Personalizados",

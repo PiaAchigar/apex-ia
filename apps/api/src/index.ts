@@ -31,6 +31,7 @@ import { createAutomationsRoutes } from "./routes/automations.routes.js";
 import { createCalendarRoutes } from "./routes/calendar.routes.js";
 import { createCallLogsRoutes } from "./routes/call-logs.routes.js";
 import { createAnalyticsRoutes } from "./routes/analytics.routes.js";
+import { createAiCredentialsRoutes } from "./routes/ai-credentials.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
@@ -74,8 +75,8 @@ app.use("/campaigns/*", checkSetupStatusMiddleware);
 app.use("/calendar/*", checkSetupStatusMiddleware);
 app.use("/call-logs/*", checkSetupStatusMiddleware);
 app.use("/analytics/*", checkSetupStatusMiddleware);
-app.use("/billing/*", checkSetupStatusMiddleware);
 app.use("/settings/*", checkSetupStatusMiddleware);
+app.use("/billing/*", checkSetupStatusMiddleware);
 
 const port = parseInt(process.env["PORT"] ?? "3001");
 
@@ -124,6 +125,7 @@ app.route("/campaigns", createCampaignsRoutes());
 app.route("/calendar", createCalendarRoutes());
 app.route("/call-logs", createCallLogsRoutes());
 app.route("/analytics", createAnalyticsRoutes());
+app.route("/settings/ai-credentials", createAiCredentialsRoutes());
 app.route("/billing", createBillingRoutes());
 app.route("/settings/channels", createChannelsRoutes(io));
 app.route("/settings/custom-fields", createCustomFieldsRoutes());

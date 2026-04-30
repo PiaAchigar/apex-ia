@@ -61,11 +61,12 @@ describe("GET /analytics/conversations", () => {
     const res = await app.request("/analytics/conversations");
     expect(res.status).toBe(200);
     const body = (await res.json()) as {
-      totalConversations: number;
-      openConversations: number;
+      success: boolean;
+      data: { totalConversations: number; openConversations: number };
     };
-    expect(body.totalConversations).toBe(150);
-    expect(body.openConversations).toBe(50);
+    expect(body.success).toBe(true);
+    expect(body.data.totalConversations).toBe(150);
+    expect(body.data.openConversations).toBe(50);
   });
 });
 
@@ -89,9 +90,10 @@ describe("GET /analytics/agents", () => {
 
     const res = await app.request("/analytics/agents");
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Array<{ agentId: string }>;
-    expect(body).toHaveLength(1);
-    expect(body[0]?.agentId).toBe("agent-1");
+    const body = (await res.json()) as { success: boolean; data: Array<{ agentId: string }> };
+    expect(body.success).toBe(true);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.agentId).toBe("agent-1");
   });
 });
 
@@ -116,8 +118,9 @@ describe("GET /analytics/channels-sla", () => {
 
     const res = await app.request("/analytics/channels-sla");
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Array<{ channel: string }>;
-    expect(body[0]?.channel).toBe("whatsapp");
+    const body = (await res.json()) as { success: boolean; data: Array<{ channel: string }> };
+    expect(body.success).toBe(true);
+    expect(body.data[0]?.channel).toBe("whatsapp");
   });
 });
 
@@ -151,8 +154,9 @@ describe("GET /analytics/volume-heatmap", () => {
     );
 
     expect(res.status).toBe(200);
-    const body = (await res.json()) as Array<{ date: string }>;
-    expect(body[0]?.date).toBe("2026-04-28");
+    const body = (await res.json()) as { success: boolean; data: Array<{ date: string }> };
+    expect(body.success).toBe(true);
+    expect(body.data[0]?.date).toBe("2026-04-28");
   });
 });
 
@@ -180,7 +184,8 @@ describe("GET /analytics/csat", () => {
 
     const res = await app.request("/analytics/csat");
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { averageCsat: number };
-    expect(body.averageCsat).toBe(4.25);
+    const body = (await res.json()) as { success: boolean; data: { averageCsat: number } };
+    expect(body.success).toBe(true);
+    expect(body.data.averageCsat).toBe(4.25);
   });
 });
