@@ -32,6 +32,7 @@ import { createCalendarRoutes } from "./routes/calendar.routes.js";
 import { createCallLogsRoutes } from "./routes/call-logs.routes.js";
 import { createAnalyticsRoutes } from "./routes/analytics.routes.js";
 import { createAiCredentialsRoutes } from "./routes/ai-credentials.routes.js";
+import { createTeamRoutes } from "./routes/settings/team.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
@@ -130,6 +131,7 @@ app.route("/billing", createBillingRoutes());
 app.route("/settings/channels", createChannelsRoutes(io));
 app.route("/settings/custom-fields", createCustomFieldsRoutes());
 app.route("/settings/automations", createAutomationsRoutes());
+app.route("/settings/team", createTeamRoutes());
 
 export { io };
 export default app;
