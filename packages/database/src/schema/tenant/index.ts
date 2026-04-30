@@ -14,3 +14,5 @@ export * from "./custom-fields.js";
 export * from "./n8n-workflows.js";
 export * from "./ai-credentials.js";
 export * from "./ai-usage-logs.js";
+export * from "./pages.js";
+export * from "./tenant-settings.js";
