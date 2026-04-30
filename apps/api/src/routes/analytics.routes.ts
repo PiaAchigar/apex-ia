@@ -214,5 +214,43 @@ export function createAnalyticsRoutes() {
     }
   );
 
+  /**
+   * GET /analytics/ai-usage
+   * Get AI usage summary: tokens, cost, requests by provider and model
+   */
+  router.get(
+    "/ai-usage",
+    zValidator("query", dateRangeSchema),
+    async (c) => {
+      try {
+        const organizationId = c.get("organizationId");
+        if (!organizationId) {
+          return c.json({ error: "UNAUTHORIZED" }, 401);
+        }
+
+        const query = c.req.valid("query");
+        const dateRange = query.startDate && query.endDate
+          ? {
+              startDate: new Date(query.startDate),
+              endDate: new Date(query.endDate),
+            }
+          : undefined;
+
+        const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
+        const analyticsService = new AnalyticsService(tenantDb);
+
+        const aiUsageSummary = await analyticsService.getAiUsageSummary(organizationId, dateRange);
+
+        return c.json({ success: true, data: aiUsageSummary }, 200);
+      } catch (error) {
+        logger.error({ error }, "Error fetching AI usage summary");
+        return c.json(
+          { success: false, error: { code: "AI_USAGE_SUMMARY_FETCH_FAILED", message: error instanceof Error ? error.message : "Failed to fetch AI usage summary" } },
+          500
+        );
+      }
+    }
+  );
+
   return router;
 }

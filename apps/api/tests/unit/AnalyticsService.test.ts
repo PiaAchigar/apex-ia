@@ -89,6 +89,57 @@ describe("AnalyticsService", () => {
       expect(typeof service.getChannelSlaReport).toBe("function");
       expect(typeof service.getVolumeHeatmap).toBe("function");
       expect(typeof service.getCsatReport).toBe("function");
+      expect(typeof service.getAiUsageSummary).toBe("function");
+    });
+  });
+
+  describe("getAiUsageSummary", () => {
+    it("should throw AI_USAGE_SUMMARY_FETCH_FAILED on error", async () => {
+      mockDb.select.mockImplementation(() => {
+        throw new Error("DB error");
+      });
+
+      await expect(service.getAiUsageSummary("org-1")).rejects.toThrow(
+        "AI_USAGE_SUMMARY_FETCH_FAILED"
+      );
+    });
+
+    it("should return zero values when no logs exist", async () => {
+      mockDb.select.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+          groupBy: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+            groupBy: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      const result = await service.getAiUsageSummary("org-1");
+
+      expect(result.summary.totalRequests).toBe(0);
+      expect(result.summary.totalTokens).toBe(0);
+      expect(result.byProvider).toEqual([]);
+      expect(result.byModel).toEqual([]);
+    });
+
+    it("should respect dateRange filter", async () => {
+      const startDate = new Date("2026-04-01");
+      const endDate = new Date("2026-04-30");
+
+      mockDb.select.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([]),
+          groupBy: vi.fn().mockReturnValue({
+            where: vi.fn().mockResolvedValue([]),
+            groupBy: vi.fn().mockResolvedValue([]),
+          }),
+        }),
+      });
+
+      await service.getAiUsageSummary("org-1", { startDate, endDate });
+
+      expect(mockDb.select).toHaveBeenCalled();
     });
   });
 });

@@ -43,6 +43,12 @@ export default function SettingsPage() {
       icon: Sparkles,
     },
     {
+      label: "Uso de IA",
+      description: "Monitorea tokens, costos y requests de APIs de IA",
+      href: `/settings/ai-usage`,
+      icon: BarChart3,
+    },
+    {
       label: "Campos Personalizados",
       description: "Crea campos extra para Contactos y Deals",
       href: `/settings/custom-fields`,

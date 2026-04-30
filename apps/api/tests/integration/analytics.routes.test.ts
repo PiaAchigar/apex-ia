@@ -8,6 +8,7 @@ const mockAnalyticsMethods = {
   getChannelSlaReport: vi.fn(),
   getVolumeHeatmap: vi.fn(),
   getCsatReport: vi.fn(),
+  getAiUsageSummary: vi.fn(),
 };
 
 vi.mock("../../src/services/AnalyticsService.js", () => ({
@@ -187,5 +188,107 @@ describe("GET /analytics/csat", () => {
     const body = (await res.json()) as { success: boolean; data: { averageCsat: number } };
     expect(body.success).toBe(true);
     expect(body.data.averageCsat).toBe(4.25);
+  });
+});
+
+describe("GET /analytics/ai-usage", () => {
+  let app: ReturnType<typeof buildApp>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    app = buildApp();
+  });
+
+  it("debería retornar 200 con resumen de uso de IA", async () => {
+    mockAnalyticsMethods.getAiUsageSummary.mockResolvedValueOnce({
+      summary: {
+        totalRequests: 42,
+        totalInputTokens: 5000,
+        totalOutputTokens: 3000,
+        totalTokens: 8000,
+        estimatedCostUsd: 2.5,
+        errorRate: 2.38,
+      },
+      byProvider: [
+        {
+          provider: "anthropic",
+          requests: 30,
+          totalTokens: 6000,
+          estimatedCostUsd: 1.8,
+        },
+        {
+          provider: "openai",
+          requests: 12,
+          totalTokens: 2000,
+          estimatedCostUsd: 0.7,
+        },
+      ],
+      byModel: [
+        {
+          model: "claude-haiku-4-5-20251001",
+          provider: "anthropic",
+          requests: 30,
+          totalTokens: 6000,
+        },
+        {
+          model: "gpt-4o-mini",
+          provider: "openai",
+          requests: 12,
+          totalTokens: 2000,
+        },
+      ],
+      dailyTimeline: [
+        {
+          date: "2026-04-28",
+          requests: 20,
+          totalTokens: 4000,
+        },
+        {
+          date: "2026-04-29",
+          requests: 22,
+          totalTokens: 4000,
+        },
+      ],
+    });
+
+    const res = await app.request("/analytics/ai-usage");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      success: boolean;
+      data: {
+        summary: { totalRequests: number };
+        byProvider: Array<{ provider: string }>;
+      };
+    };
+    expect(body.success).toBe(true);
+    expect(body.data.summary.totalRequests).toBe(42);
+    expect(body.data.byProvider).toHaveLength(2);
+  });
+
+  it("debería filtrar por fechas correctamente", async () => {
+    mockAnalyticsMethods.getAiUsageSummary.mockResolvedValueOnce({
+      summary: {
+        totalRequests: 10,
+        totalInputTokens: 2000,
+        totalOutputTokens: 1000,
+        totalTokens: 3000,
+        estimatedCostUsd: 0.9,
+        errorRate: 0,
+      },
+      byProvider: [],
+      byModel: [],
+      dailyTimeline: [],
+    });
+
+    const startDate = encodeURIComponent("2026-04-01T00:00:00Z");
+    const endDate = encodeURIComponent("2026-04-15T23:59:59Z");
+    const res = await app.request(
+      `/analytics/ai-usage?startDate=${startDate}&endDate=${endDate}`
+    );
+
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { success: boolean; data: { summary: { totalRequests: number } } };
+    expect(body.success).toBe(true);
+    expect(body.data.summary.totalRequests).toBe(10);
   });
 });
