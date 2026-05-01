@@ -36,6 +36,8 @@ import { createTeamRoutes } from "./routes/settings/team.routes.js";
 import { createApiKeyRoutes } from "./routes/settings/api-keys.routes.js";
 import { createPagesRoutes, createPublicPagesRoutes } from "./routes/settings/pages.routes.js";
 import { createCustomCodeRoutes } from "./routes/settings/custom-code.routes.js";
+import { createAuditLogsRoutes } from "./routes/settings/audit-logs.routes.js";
+import { createBackupRoutes } from "./routes/settings/backup.routes.js";
 import { createSocketServer } from "./socket/socketServer.js";
 import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
@@ -138,6 +140,8 @@ app.route("/settings/team", createTeamRoutes());
 app.route("/settings/api-keys", createApiKeyRoutes());
 app.route("/settings/pages", createPagesRoutes());
 app.route("/settings/custom-code", createCustomCodeRoutes());
+app.route("/settings/audit-logs", createAuditLogsRoutes());
+app.route("/settings/backups", createBackupRoutes());
 app.route("/pages/public", createPublicPagesRoutes());
 
 export { io };

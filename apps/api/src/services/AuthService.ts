@@ -1,8 +1,9 @@
 import { supabaseAdmin } from "../db/supabase-admin.js";
 import { db } from "../db/drizzle.js";
-import { organizations, users, auditLogs, roles } from "@apex-ia/database/schema/public";
+import { organizations, users, roles } from "@apex-ia/database/schema/public";
 import { eq } from "drizzle-orm";
 import { logger } from "../utils/logger.js";
+import { auditTrailService } from "./AuditTrailService.js";
 import type { RegisterInput, LoginInput } from "../utils/validators.js";
 import type { PermissionsJson } from "@apex-ia/database/schema/public";
 
@@ -66,12 +67,13 @@ export class AuthService {
         roleId: adminRole.id,
       });
 
-      await db.insert(auditLogs).values({
+      await auditTrailService.logAction({
         userId,
+        organizationId: org.id,
         action: "org.created",
         resourceType: "organization",
         resourceId: org.id,
-        newValuesJson: { slug: organizationSlug, plan: "starter" },
+        newValues: { slug: organizationSlug, plan: "starter" },
         ipAddress,
       });
 

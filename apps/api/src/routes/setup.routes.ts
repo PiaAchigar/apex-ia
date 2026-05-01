@@ -15,8 +15,9 @@ import {
   validateSupabaseProjectUrl,
 } from "../utils/database-validation.js";
 import { db } from "../db/drizzle.js";
-import { organizations, auditLogs } from "@apex-ia/database/schema/public";
+import { organizations } from "@apex-ia/database/schema/public";
 import { logger } from "../utils/logger.js";
+import { auditTrailService } from "../services/AuditTrailService.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLIENT_SCHEMA_SQL = resolve(
@@ -111,12 +112,13 @@ export function createSetupRoutes() {
 
         await runClientSchemaMigrations(databaseUrl);
 
-        await db.insert(auditLogs).values({
+        await auditTrailService.logAction({
           userId,
+          organizationId,
           action: "organization.client_db_connected",
           resourceType: "organization",
           resourceId: organizationId,
-          newValuesJson: { tablesCreated: CLIENT_TABLE_NAMES.length },
+          newValues: { tablesCreated: CLIENT_TABLE_NAMES.length },
         });
 
         logger.info({ organizationId }, "Client DB schema initialized");
@@ -147,8 +149,9 @@ export function createSetupRoutes() {
       .set({ setupCompletedAt: new Date() })
       .where(eq(organizations.id, organizationId));
 
-    await db.insert(auditLogs).values({
+    await auditTrailService.logAction({
       userId,
+      organizationId,
       action: "organization.setup_completed",
       resourceType: "organization",
       resourceId: organizationId,

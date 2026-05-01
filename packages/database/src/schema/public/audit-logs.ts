@@ -8,6 +8,7 @@ import {
 
 export const auditLogs = pgTable("audit_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: uuid("organization_id"),
   userId: uuid("user_id"),
   action: varchar("action", { length: 100 }).notNull(),
   resourceType: varchar("resource_type", { length: 50 }),
