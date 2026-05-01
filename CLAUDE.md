@@ -8,7 +8,7 @@ Lee estos archivos antes de codear:
 - Arquitectura dual-database: docs/ARCHITECTURE-CHANGES.md  ← LEER SIEMPRE
 - Convenciones de nombres: docs/conventions.md
 - Testing: docs/testing.md
-- Fase actual: docs/fases/fase-8.md  ← cambiás esto al avanzar
+- Fase actual: docs/fases/fase-8.md (MVP COMPLETADO) → Próxima: FASE 9 — White-Label (documentada en este archivo)
 
 ---
 
@@ -537,6 +537,162 @@ TEST_DATABASE_URL=       # Supabase staging o local
 
 ---
 
+## FASE 9 — White-Label + Customización Avanzada
+
+### ✅ Subfase 9.1 — Schema & Middleware (Dominio Personalizado)
+
+**Objetivo:** Permitir que clientes BUSINESS usen dominio personalizado en lugar de `{slug}.apexia.com`
+
+**Cambios:**
+- `packages/database/src/schema/public/organizations.ts`
+  - Agregar columnas: `customDomain` (varchar, unique, nullable), `whitelabelEnabled` (boolean, default false)
+- `apps/api/src/middleware/tenantMiddleware.ts`
+  - Resolver org por `Host` header si `customDomain` está seteado (además del slug URL actual)
+  - Fallback: si no hay custom domain, usar slug del URL como siempre
+- `apps/api/src/routes/settings/` (nueva ruta)
+  - `POST /settings/domain-verification` → validar DNS MX/CNAME antes de guardar customDomain
+  - `PUT /settings/domain` → actualizar customDomain (solo plan=business)
+
+**Archivos a tocar:**
+- `packages/database/src/schema/public/organizations.ts`
+- `apps/api/src/middleware/tenantMiddleware.ts`
+- `apps/api/src/routes/settings/domain.routes.ts` (nuevo)
+
+---
+
+### ✅ Subfase 9.2 — Branding Backend (Logo, Colores, Nombre)
+
+**Objetivo:** Servicios backend para guardar/obtener branding customizado
+
+**Cambios:**
+- `apps/api/src/services/BrandingService.ts` (nuevo)
+  - `getBranding(organizationId)` → obtener logo, colors, app name desde tenant_settings
+  - `updateBranding(organizationId, config)` → guardar keys en tenant_settings (logoUrl, primaryColor, accentColor, appName)
+  - Validación: solo si `plan=business`
+- `apps/api/src/routes/settings/branding.routes.ts` (nuevo)
+  - `GET /settings/branding` → lista branding actual
+  - `PUT /settings/branding` → actualizar branding (validar plan=business)
+  - Registrar en `index.ts`
+
+**Archivos a tocar:**
+- `apps/api/src/services/BrandingService.ts` (nuevo)
+- `apps/api/src/routes/settings/branding.routes.ts` (nuevo)
+- `apps/api/src/index.ts` (registrar ruta)
+
+---
+
+### ✅ Subfase 9.3 — Branding Frontend (Componentes + Hooks)
+
+**Objetivo:** Renderizar branding customizado en la UI del cliente
+
+**Cambios:**
+- `apps/web/hooks/useBranding.ts` (nuevo)
+  - `useQuery` a `GET /settings/branding`
+  - Cache en localStorage para evitar flickering
+  - Retorna `{ logo, primaryColor, accentColor, appName, isLoading }`
+- `apps/web/components/shared/AppSidebar.tsx`
+  - Renderizar `logoUrl` custom en lugar de hardcoded (si whitelabelEnabled=true)
+  - Renderizar `appName` custom en lugar de "Apex IA"
+- `apps/web/components/shared/AppTopbar.tsx`
+  - Actualizar colores dinámicamente si branding custom existe
+- `apps/web/lib/email-templates/` (existentes)
+  - Inyectar `logoUrl` y `primaryColor` en templates Resend (welcome, invoice, etc.)
+- `apps/web/app/(app)/[slug]/layout.tsx`
+  - Inyectar CSS dinámico (--primary-color, --accent-color) basado en `useBranding()`
+
+**Archivos a tocar:**
+- `apps/web/hooks/useBranding.ts` (nuevo)
+- `apps/web/components/shared/AppSidebar.tsx`
+- `apps/web/components/shared/AppTopbar.tsx`
+- `apps/web/app/(app)/[slug]/layout.tsx`
+- `apps/web/lib/email-templates/*`
+
+---
+
+### ✅ Subfase 9.4 — Pricing & Conditional UI
+
+**Objetivo:** Ocultar pricing y branding settings según plan; agregar tab Branding en Settings
+
+**Cambios:**
+- `apps/web/app/(marketing)/pricing/page.tsx`
+  - Condicional: mostrar solo si `plan=starter` O setup incompleto
+  - Ocultar si `plan=growth|business`
+- `apps/web/app/(app)/[slug]/settings/layout.tsx` (nuevo tab)
+  - Agregar tab "Branding" visible solo si `plan=business`
+  - Link a `settings/branding/page.tsx`
+- `apps/web/app/(app)/[slug]/settings/branding/page.tsx` (nueva página)
+  - Formulario: upload logo, color pickers, app name input, custom domain
+  - Usa `useBranding()` + `useBillingStatus()` para gating
+
+**Archivos a tocar:**
+- `apps/web/app/(marketing)/pricing/page.tsx`
+- `apps/web/app/(app)/[slug]/settings/layout.tsx`
+- `apps/web/app/(app)/[slug]/settings/branding/page.tsx` (nuevo)
+
+---
+
+### Resumen de Esfuerzo: Fase 9
+
+| Subfase | Duración | Archivos |
+|---------|----------|----------|
+| 9.1 — Schema + Middleware | 2 días | 3 files |
+| 9.2 — Backend Branding | 2 días | 3 files |
+| 9.3 — Frontend + Hooks | 3 días | 6 files |
+| 9.4 — Conditional UI | 1 día | 3 files |
+| **Total** | **~1 semana** | **15 files** |
+
+---
+
+## FASE 10 — OpenAPI/Swagger (Documentación Automática de API)
+
+### ✅ Subfase 10.1 — Integración hono-openapi (Middleware sin Refactor)
+
+**Objetivo:** Generar documentación Swagger automática desde esquemas Zod existentes sin modificar rutas
+
+**Análisis Previo:**
+- ✅ Esquemas Zod YA EXISTEN en `apps/api/src/validators/`
+- ✅ 31 archivos de rutas usa `@hono/zod-validator` + `zValidator()`
+- ✅ Compatible automático con `hono-openapi`
+
+**Cambios:**
+- `package.json` (apps/api)
+  - Agregar dependencia: `hono-openapi` (latest)
+- `apps/api/src/index.ts`
+  - Importar: `import { honoOpenAPI } from 'hono-openapi'`
+  - Agregar middleware (línea ~60, antes de rutas): `app.use('*', honoOpenAPI())`
+- `.env.example`
+  - Agregar (opcional): `SWAGGER_ENABLED=true` para control de feature
+
+**Testing:**
+- Verificar `/api-docs` disponible post-deploy
+- Testear Swagger UI carga correctamente
+- Validar que endpoints aparecen auto-documentados
+
+**Impacto:**
+- ✅ **Cero cambios** en archivos de rutas existentes
+- ✅ Auto-extrae schemas de `zValidator()` actual
+- ✅ Genera `/api-docs` con Swagger UI interactivo
+- ✅ Clientes pueden descargar `openapi.json`
+
+**Beneficio:**
+- Partners/integradores entienden API en 5 minutos
+- SDKs auto-generables (Node, Python, Ruby, etc.)
+- Testing automático (Postman, Insomnia importan spec)
+- Validación de tipos para integraciones
+
+**Esfuerzo:** ~6 horas (integración + testing + deploy validation)
+
+---
+
+### Resumen de Esfuerzo: Fase 10
+
+| Subfase | Duración | Archivos |
+|----------|----------|----------|
+| 10.1 — hono-openapi Middleware | 6 horas | 2 files |
+| **Total** | **~6 horas** | **2 files** |
+
+---
+
 ## Notas del Proyecto
 
 - URL del dashboard: `app.apexia.com/{slug}/inbox` — el slug identifica a cada empresa
@@ -547,3 +703,8 @@ TEST_DATABASE_URL=       # Supabase staging o local
 - Las credenciales de canales (y de cliente DB) se encriptan con AES-256-GCM antes de guardar en DB
 - i18n: español por defecto, inglés como segundo idioma desde Fase 1
 - El programa de afiliados (30% comisión) se implementa en Fase 8 con Stripe referrals
+
+## Al finalizar el MVP
+- Hacer un final code review + test completo antes de ir a producción
+- Documentar el deploy process
+- Setup de monitoring en producción (Sentry, uptime checks)

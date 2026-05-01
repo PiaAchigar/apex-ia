@@ -1,10 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUiStore } from "@/stores/uiStore";
 import { useAuthStore } from "@/stores/authStore";
 import { useInboxStore } from "@/stores/inboxStore";
+import { useBranding } from "@/hooks/useBranding";
 import {
   Inbox,
   Kanban,
@@ -52,6 +54,7 @@ export function AppSidebar({ slug }: AppSidebarProps) {
   const { isSidebarCollapsed, toggleSidebar } = useUiStore();
   const { user, clearAuth } = useAuthStore();
   const { unreadCount } = useInboxStore();
+  const { branding } = useBranding();
 
   const isAdmin = user?.roleName === "admin";
 
@@ -76,10 +79,22 @@ export function AppSidebar({ slug }: AppSidebarProps) {
         }`}
       >
         <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center flex-shrink-0">
-          <Zap className="w-4 h-4 text-white" aria-hidden="true" />
+          {branding?.logoUrl ? (
+            <Image
+              src={branding.logoUrl}
+              alt={branding.appName || "Logo"}
+              width={24}
+              height={24}
+              className="w-6 h-6"
+            />
+          ) : (
+            <Zap className="w-4 h-4 text-white" aria-hidden="true" />
+          )}
         </div>
         {!isSidebarCollapsed && (
-          <span className="text-sm font-bold text-white tracking-wide">Apex IA</span>
+          <span className="text-sm font-bold text-white tracking-wide">
+            {branding?.appName ?? "Apex IA"}
+          </span>
         )}
       </div>
 

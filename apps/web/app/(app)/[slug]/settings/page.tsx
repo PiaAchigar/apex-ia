@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Mail, MessageSquare, Zap, Users, CreditCard, Key, FileText, Settings as SettingsIcon, Sparkles, BarChart3 } from "lucide-react";
+import { Mail, MessageSquare, Zap, Users, CreditCard, Key, FileText, Settings as SettingsIcon, Sparkles, BarChart3, Palette } from "lucide-react";
+import { useBillingStatus } from "@/hooks/useBillingStatus";
 
 type SettingsCard = {
   label: string;
@@ -16,6 +17,7 @@ type SettingsCard = {
 export default function SettingsPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { plan } = useBillingStatus();
 
   const settingsCards: SettingsCard[] = [
     {
@@ -74,6 +76,16 @@ export default function SettingsPage() {
       href: `/settings/api-access`,
       icon: Key,
     },
+    ...(plan === "business"
+      ? [
+          {
+            label: "Marca",
+            description: "Personaliza logo, colores y dominio",
+            href: `/settings/branding`,
+            icon: Palette,
+          },
+        ]
+      : []),
     {
       label: "Generales",
       description: "Timezone, idioma, comportamiento general",
