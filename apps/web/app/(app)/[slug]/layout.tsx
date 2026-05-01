@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { AppTopbar } from "@/components/shared/AppTopbar";
 import { TrialBanner } from "@/components/shared/TrialBanner";
+import { PlanLimitBanner } from "@/components/shared/PlanLimitBanner";
 import { QueryClientProvider } from "./QueryClientProvider";
 
 type AppLayoutProps = {
@@ -33,6 +34,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
           <AppTopbar slug={slug} />
           <TrialBanner slug={slug} />
+          <PlanLimitBanner />
           <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBillingStatus } from "../../../../../hooks/useBillingStatus";
+import { useAuth } from "../../../../../hooks/useAuth";
 import { PLAN_PRICES, PLAN_FEATURES } from "@apex-ia/utils/billing";
 import { Button } from "../../../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
@@ -12,6 +13,7 @@ import { Loader2, Check } from "lucide-react";
 export default function BillingPage({ params }: { params: { slug: string } }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { session } = useAuth();
   const { data, isLoading, refetch } = useBillingStatus();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
   const [subscribingTo, setSubscribingTo] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export default function BillingPage({ params }: { params: { slug: string } }) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${session?.access_token}`,
         },
         body: JSON.stringify({
           planId,
@@ -69,7 +71,7 @@ export default function BillingPage({ params }: { params: { slug: string } }) {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/billing/subscription`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${session?.access_token}`,
         },
       });
 

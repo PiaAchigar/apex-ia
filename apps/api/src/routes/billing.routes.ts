@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { billingService } from "../services/BillingService.js";
+import { checkPlanLimitBeforeAction } from "../utils/planLimits.js";
 import { logger } from "../utils/logger.js";
 
 const subscribeSchema = z.object({
@@ -78,6 +79,40 @@ export function createBillingRoutes() {
         {
           success: false,
           error: { code: "CANCEL_ERROR", message: "Error cancelling subscription" },
+        },
+        500
+      );
+    }
+  });
+
+  // GET /billing/plan-limits
+  router.get("/plan-limits", async (c) => {
+    const auth = c.get("auth");
+    const { organizationId } = auth;
+
+    try {
+      const [flows, channels, conversations, teamMembers] = await Promise.all([
+        checkPlanLimitBeforeAction(organizationId, "flows"),
+        checkPlanLimitBeforeAction(organizationId, "channels"),
+        checkPlanLimitBeforeAction(organizationId, "conversations"),
+        checkPlanLimitBeforeAction(organizationId, "team_members"),
+      ]);
+
+      return c.json({
+        success: true,
+        data: {
+          flows,
+          channels,
+          conversations,
+          team_members: teamMembers,
+        },
+      });
+    } catch (error) {
+      logger.error({ error, organizationId }, "Error fetching plan limits");
+      return c.json(
+        {
+          success: false,
+          error: { code: "PLAN_LIMITS_ERROR", message: "Error fetching plan limits" },
         },
         500
       );

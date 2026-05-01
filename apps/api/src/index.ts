@@ -1,4 +1,6 @@
 import "dotenv/config";
+import { initSentry } from "./utils/sentry.js";
+initSentry();
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { requestLoggerMiddleware } from "./middleware/requestLoggerMiddleware.js";
@@ -44,6 +46,8 @@ import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
 import { schedulePlanDowngradeCron } from "./jobs/plan-downgrade.job.js";
 import { startCampaignWorker } from "./queues/campaignWorker.js";
 import { logger } from "./utils/logger.js";
+import { db } from "./db/drizzle.js";
+import { Redis } from "@upstash/redis";
 
 const app = new Hono();
 
@@ -54,14 +58,46 @@ app.use("*", publicRateLimitMiddleware);
 
 app.onError(errorHandlerMiddleware);
 
-app.get("/health", (c) =>
-  c.json({
-    status: "ok",
-    checks: { database: "ok", redis: "ok" },
-    timestamp: new Date().toISOString(),
-    version: "1.0.0",
-  })
-);
+app.get("/health", async (c) => {
+  const checks: Record<string, string> = {};
+  let isHealthy = true;
+
+  // Check database
+  try {
+    await db.execute("SELECT 1");
+    checks.database = "ok";
+  } catch (error) {
+    checks.database = "error";
+    isHealthy = false;
+    logger.error({ error }, "Database health check failed");
+  }
+
+  // Check Redis
+  try {
+    const redis = new Redis({
+      url: process.env.REDIS_URL,
+      token: process.env.REDIS_TOKEN,
+    });
+    await redis.ping();
+    checks.redis = "ok";
+  } catch (error) {
+    checks.redis = "error";
+    isHealthy = false;
+    logger.warn({ error }, "Redis health check failed");
+  }
+
+  const status = isHealthy ? "ok" : "degraded";
+
+  return c.json(
+    {
+      status,
+      checks,
+      timestamp: new Date().toISOString(),
+      version: "1.0.0",
+    },
+    isHealthy ? 200 : 503
+  );
+});
 
 // Auth: no setup check needed
 app.route("/auth", authRoutes);

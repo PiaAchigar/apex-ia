@@ -8,7 +8,7 @@ Lee estos archivos antes de codear:
 - Arquitectura dual-database: docs/ARCHITECTURE-CHANGES.md  ← LEER SIEMPRE
 - Convenciones de nombres: docs/conventions.md
 - Testing: docs/testing.md
-- Fase actual: docs/fases/fase-6.md  ← cambiás esto al avanzar
+- Fase actual: docs/fases/fase-8.md  ← cambiás esto al avanzar
 
 ---
 

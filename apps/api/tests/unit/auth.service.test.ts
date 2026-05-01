@@ -113,7 +113,7 @@ describe("AuthService", () => {
         .mockReturnValueOnce({
           values: vi.fn().mockReturnValue({
             returning: vi.fn().mockResolvedValue([
-              { id: mockOrgId, slug: "acme", name: "Acme Corp", plan: "free" },
+              { id: mockOrgId, slug: "acme", name: "Acme Corp", plan: "starter" },
             ]),
           }),
         } as never)

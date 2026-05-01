@@ -1,5 +1,6 @@
 import type { ErrorHandler } from "hono";
 import { ZodError } from "zod";
+import { Sentry } from "../utils/sentry.js";
 import { logger } from "../utils/logger.js";
 
 export const errorHandlerMiddleware: ErrorHandler = (err, c) => {
@@ -26,6 +27,16 @@ export const errorHandlerMiddleware: ErrorHandler = (err, c) => {
     },
     "Unhandled error"
   );
+
+  // Capture error in Sentry
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(err, {
+      tags: {
+        path: c.req.path,
+        method: c.req.method,
+      },
+    });
+  }
 
   return c.json(
     {

@@ -41,6 +41,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@sentry/node": "^10.51.0",
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^8.0.0",
     "@types/supertest": "^6.0.2",
