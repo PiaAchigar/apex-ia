@@ -3,6 +3,7 @@ import { initSentry } from "./utils/sentry.js";
 initSentry();
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { honoOpenAPI } from "hono-openapi";
 import { requestLoggerMiddleware } from "./middleware/requestLoggerMiddleware.js";
 import { errorHandlerMiddleware } from "./middleware/errorHandlerMiddleware.js";
 import { corsMiddleware } from "./middleware/corsMiddleware.js";
@@ -56,6 +57,7 @@ app.use(corsMiddleware);
 app.use("*", securityHeadersMiddleware);
 app.use("*", requestLoggerMiddleware);
 app.use("*", publicRateLimitMiddleware);
+app.use("*", honoOpenAPI());
 
 app.onError(errorHandlerMiddleware);
 
