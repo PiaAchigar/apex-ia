@@ -643,53 +643,32 @@ TEST_DATABASE_URL=       # Supabase staging o local
 
 ---
 
-## FASE 10 — OpenAPI/Swagger (Documentación Automática de API)
+## FASE 10 — OpenAPI/Swagger (Documentación Automática de API) — POST-MVP
 
-### ✅ Subfase 10.1 — Integración hono-openapi (Middleware sin Refactor)
+⚠️ **DEFERIDA PARA POST-MVP** — Requiere refactor arquitectónico significativo.
 
-**Objetivo:** Generar documentación Swagger automática desde esquemas Zod existentes sin modificar rutas
+### ❌ Subfase 10.1 — Integración OpenAPI (Análisis de Viabilidad)
 
-**Análisis Previo:**
-- ✅ Esquemas Zod YA EXISTEN en `apps/api/src/validators/`
-- ✅ 31 archivos de rutas usa `@hono/zod-validator` + `zValidator()`
-- ✅ Compatible automático con `hono-openapi`
-
-**Cambios:**
-- `package.json` (apps/api)
-  - Agregar dependencia: `hono-openapi` (latest)
-- `apps/api/src/index.ts`
-  - Importar: `import { honoOpenAPI } from 'hono-openapi'`
-  - Agregar middleware (línea ~60, antes de rutas): `app.use('*', honoOpenAPI())`
-- `.env.example`
-  - Agregar (opcional): `SWAGGER_ENABLED=true` para control de feature
-
-**Testing:**
-- Verificar `/api-docs` disponible post-deploy
-- Testear Swagger UI carga correctamente
-- Validar que endpoints aparecen auto-documentados
+**Análisis:**
+- `hono-openapi` (paquete standalone): No exporta la interfaz esperada; requiere reescribir lógica de validación
+- `@hono/zod-openapi` (oficial Hono): Requiere cambiar `new Hono()` → `new OpenAPIHono()` + refactorizar TODAS las 31 rutas para usar `createRoute()` + `app.openapi()` en lugar de `app.get/post/etc` + `zValidator()`
 
 **Impacto:**
-- ✅ **Cero cambios** en archivos de rutas existentes
-- ✅ Auto-extrae schemas de `zValidator()` actual
-- ✅ Genera `/api-docs` con Swagger UI interactivo
-- ✅ Clientes pueden descargar `openapi.json`
+- ❌ **NOT zero-refactor** — Refactoring masivo de rutas (31+ archivos)
+- ❌ Breaking change en arquitectura de middleware (tenantMiddleware, authMiddleware, etc.)
+- ✅ Resultado: OpenAPI/Swagger UI auto-generada + SDKs generables
 
-**Beneficio:**
-- Partners/integradores entienden API en 5 minutos
-- SDKs auto-generables (Node, Python, Ruby, etc.)
-- Testing automático (Postman, Insomnia importan spec)
-- Validación de tipos para integraciones
+**Recomendación:** POST-MVP
+- Implementar cuando el MVP esté estable y bien testado
+- Considerar si el ROI de OpenAPI justifica el refactor
+- Alternativa ligera: Documentación manual en `docs/API.md` + Postman collection
 
-**Esfuerzo:** ~6 horas (integración + testing + deploy validation)
+### Resumen de Esfuerzo: Fase 10 (DEFERIDA)
 
----
-
-### Resumen de Esfuerzo: Fase 10
-
-| Subfase | Duración | Archivos |
-|----------|----------|----------|
-| 10.1 — hono-openapi Middleware | 6 horas | 2 files |
-| **Total** | **~6 horas** | **2 files** |
+| Subfase | Duración | Archivos | Notas |
+|----------|----------|----------|-------|
+| 10.1 — OpenAPI Integration | 2-3 días | 31+ files | Refactor arquitectónico; deferred |
+| **Total** | **~3 días** | **31+ files** | POST-MVP |
 
 ---
 
