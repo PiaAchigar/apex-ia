@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/shared/AppSidebar";
 import { AppTopbar } from "@/components/shared/AppTopbar";
 import { TrialBanner } from "@/components/shared/TrialBanner";
 import { PlanLimitBanner } from "@/components/shared/PlanLimitBanner";
+import { SetupGuard } from "@/components/setup/SetupGuard";
 import { QueryClientProvider } from "./QueryClientProvider";
 
 type AppLayoutProps = {
@@ -35,6 +36,7 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
           <AppTopbar slug={slug} />
           <TrialBanner slug={slug} />
           <PlanLimitBanner />
+          <SetupGuard />
           <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
         </div>
       </div>

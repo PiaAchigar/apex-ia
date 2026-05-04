@@ -11,7 +11,8 @@ export default function BrandingPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { branding, isLoading, updateBranding, updateDomain, isUpdatingBranding, isUpdatingDomain } = useBranding();
-  const { plan } = useBillingStatus();
+  const { data: billingData } = useBillingStatus();
+  const plan = billingData?.plan;
 
   // Form state
   const [appName, setAppName] = useState("");

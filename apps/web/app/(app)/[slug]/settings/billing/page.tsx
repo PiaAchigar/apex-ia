@@ -4,13 +4,13 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBillingStatus } from "../../../../../hooks/useBillingStatus";
 import { useAuth } from "../../../../../hooks/useAuth";
-import { PLAN_PRICES, PLAN_FEATURES } from "@apex-ia/utils/billing";
+import { PLAN_PRICES, PLAN_FEATURES } from "@apex-ia/utils";
 import { Button } from "../../../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../../../components/ui/card";
 import { Badge } from "../../../../../components/ui/badge";
 import { Loader2, Check } from "lucide-react";
 
-export default function BillingPage({ params }: { params: { slug: string } }) {
+export default function BillingPage({ params }: { params: Promise<{ slug: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session } = useAuth();

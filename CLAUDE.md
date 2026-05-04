@@ -537,6 +537,22 @@ TEST_DATABASE_URL=       # Supabase staging o local
 
 ---
 
+## 🎯 SetupGuard Feature — Modal de Setup Automático
+
+**Problema:** Cuando un usuario nuevo se loguea sin haber completado el setup (conectar su base de datos cliente), va a `/{slug}/inbox` pero TODAS las APIs devuelven 403 `SETUP_REQUIRED`. El UX es confuso.
+
+**Solución:** Un modal bloqueante que aparece automáticamente en el dashboard si `setupCompletedAt` es null. El modal encapsula los pasos 1-2 del setup wizard existente (validar DB + inicializar schema) en un popup de una sola vez.
+
+**Archivos:**
+- `apps/web/hooks/useSetupStatus.ts` (nuevo) — TanStack Query hook, `GET /setup/status`, `staleTime: 0`
+- `apps/web/components/setup/SetupRequiredModal.tsx` (nuevo) — Modal con state machine + 3 mutaciones
+- `apps/web/components/setup/SetupGuard.tsx` (nuevo) — Client guard que renderiza el modal si setup incompleto
+- `apps/web/app/(app)/[slug]/layout.tsx` (modificar) — Agregar `<SetupGuard />` después de `<PlanLimitBanner />`
+
+**Estado:** EN PROGRESO (2026-05-04)
+
+---
+
 ## FASE 9 — White-Label + Customización Avanzada
 
 ### ✅ Subfase 9.1 — Schema & Middleware (Dominio Personalizado)

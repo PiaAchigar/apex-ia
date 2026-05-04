@@ -10,7 +10,8 @@ import { useAuth } from "@/hooks/useAuth";
 export default function TeamPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { userId: currentUserId } = useAuth();
+  const { session } = useAuth();
+  const currentUserId = session?.user?.id;
   const {
     members,
     roles,

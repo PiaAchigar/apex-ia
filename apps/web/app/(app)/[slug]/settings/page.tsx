@@ -17,7 +17,8 @@ type SettingsCard = {
 export default function SettingsPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { plan } = useBillingStatus();
+  const { data: billingData } = useBillingStatus();
+  const plan = billingData?.plan;
 
   const settingsCards: SettingsCard[] = [
     {
@@ -68,7 +69,6 @@ export default function SettingsPage() {
       description: "Plan actual, próxima factura, upgrade/downgrade",
       href: `/settings/billing`,
       icon: CreditCard,
-      comingSoon: true,
     },
     {
       label: "Acceso API",
