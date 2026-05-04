@@ -217,7 +217,7 @@ apex-ia/
 │       │   │       ├── instagram-webhook.routes.ts
 │       │   │       ├── facebook-messenger-webhook.routes.ts
 │       │   │       ├── telegram-webhook.routes.ts
-│       │   │       └── stripe-webhook.routes.ts
+│       │   │       └── mercadopago.routes.ts
 │       │   ├── services/
 │       │   │   ├── AuthService.ts                → register (org + user en MI Supabase), login (JWT + roleId + permissions), refresh, logout
 │       │   │   ├── ClientDatabaseService.ts      → encripta/desencripta credenciales cliente (AES-256-GCM)
@@ -230,7 +230,7 @@ apex-ia/
 │       │   │   ├── CampaignService.ts            ⚠️ Recibe organizationId, resuelve cliente Supabase
 │       │   │   ├── AiResponseService.ts
 │       │   │   ├── AnalyticsService.ts           ⚠️ Recibe organizationId, resuelve cliente Supabase
-│       │   │   ├── BillingService.ts             ✅ Sigue en MI Supabase (Stripe, planes)
+│       │   │   ├── BillingService.ts             ✅ Sigue en MI Supabase (Mercado Pago, planes)
 │       │   │   ├── TeamService.ts                ✅ Sigue en MI Supabase (users, roles)
 │       │   │   ├── ApiKeyService.ts
 │       │   │   └── channels/
@@ -468,10 +468,10 @@ OPENAI_API_KEY=
 GOOGLE_GEMINI_API_KEY=
 OPENROUTER_API_KEY=
 
-# Stripe
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+# Mercado Pago
+MP_ACCESS_TOKEN=APP_USR-...
+MP_WEBHOOK_SECRET=
+MP_CURRENCY=ARS
 
 # Email
 RESEND_API_KEY=
