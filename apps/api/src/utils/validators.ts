@@ -5,7 +5,7 @@ export const registerSchema = z.object({
   password: z
     .string()
     .min(8, "Contraseña mínimo 8 caracteres")
-    .max(100, "Contraseña muy larga"),
+    .max(50, "Contraseña muy larga"),
   fullName: z.string().min(2, "Nombre mínimo 2 caracteres").max(100),
   organizationName: z
     .string()

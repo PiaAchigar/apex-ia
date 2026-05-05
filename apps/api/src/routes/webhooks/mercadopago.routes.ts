@@ -57,7 +57,8 @@ export function createMercadoPagoWebhookRoutes() {
 
     // Handle subscription_preapproval events
     if (notification.type === "subscription_preapproval") {
-      return handlePreapprovalEvent(notification);
+      await handlePreapprovalEvent(notification);
+      return c.json({ status: "ok" }, 200);
     }
 
     // Only process payment notifications
@@ -172,7 +173,7 @@ export function createMercadoPagoWebhookRoutes() {
               periodEnd,
               updatedAt: new Date(),
             })
-            .where(eq(subscriptions.id, existingSubscription[0].id));
+            .where(eq(subscriptions.id, existingSubscription[0]!.id));
         } else {
           await tx.insert(subscriptions).values({
             organizationId: externalReference,
@@ -216,17 +217,17 @@ export function createMercadoPagoWebhookRoutes() {
 async function handlePreapprovalEvent(notification: {
   status?: string;
   data?: { id: string | number };
-}) {
+}): Promise<void> {
   const preapprovalId = notification.data?.id;
   if (!preapprovalId || notification.status !== "authorized") {
-    return { status: "ok" };
+    return;
   }
 
   // Fetch preapproval details from MP API
   const mpAccessToken = process.env["MP_ACCESS_TOKEN"];
   if (!mpAccessToken) {
     logger.warn("MP_ACCESS_TOKEN not configured");
-    return { status: "ok" };
+    return;
   }
 
   try {
@@ -242,7 +243,7 @@ async function handlePreapprovalEvent(notification: {
 
     if (!response.ok) {
       logger.warn({ preapprovalId }, "Failed to fetch preapproval from MP API");
-      return { status: "ok" };
+      return;
     }
 
     const preapproval = (await response.json()) as {
@@ -253,7 +254,7 @@ async function handlePreapprovalEvent(notification: {
     };
 
     if (preapproval.status !== "authorized" || !preapproval.external_reference) {
-      return { status: "ok" };
+      return;
     }
 
     const organizationId = preapproval.external_reference;
@@ -284,16 +285,14 @@ async function handlePreapprovalEvent(notification: {
   } catch (err) {
     logger.error({ err, preapprovalId }, "Error processing preapproval event");
   }
-
-  return { status: "ok" };
 }
 
 function extractTimestampFromSignature(signature: string): string | null {
   const match = signature.match(/ts=(\d+)/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 function extractV1FromSignature(signature: string): string | null {
   const match = signature.match(/v1=([a-f0-9]+)/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }

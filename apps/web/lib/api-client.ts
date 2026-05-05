@@ -68,6 +68,13 @@ export const apiClient = {
       token: token ?? getStoredToken() ?? undefined,
     }),
 
+  put: <T>(path: string, body: unknown, token?: string) =>
+    apiFetch<T>(path, {
+      method: "PUT",
+      body: JSON.stringify(body),
+      token: token ?? getStoredToken() ?? undefined,
+    }),
+
   delete: <T>(path: string, token?: string) =>
     apiFetch<T>(path, { method: "DELETE", token: token ?? getStoredToken() ?? undefined }),
 };

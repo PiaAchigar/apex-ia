@@ -1,3 +1,6 @@
+// ---- Billing ----
+export { PLAN_PRICES, PLAN_FEATURES, TRIAL_DAYS } from "./billing.js";
+
 // ---- String helpers ----
 
 export function slugify(text: string): string {

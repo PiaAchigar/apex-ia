@@ -1,6 +1,6 @@
 export const PLAN_PRICES = {
-  growth: { monthly: 49000, annual: 490000 },
-  business: { monthly: 149000, annual: 1490000 },
+  growth: { monthly: 59000, annual: 590000 },
+  business: { monthly: 120000, annual: 1200000 },
 } as const;
 
 export const TRIAL_DAYS = 14;
@@ -24,4 +24,7 @@ export const PLAN_FEATURES = {
     conversations: "Ilimitadas",
     team_members: "Ilimitados",
   },
-};
+}as const;
+
+
+

@@ -26,15 +26,13 @@ interface CompleteResponse {
 
 export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps) {
   const [step, setStep] = useState<SetupStep>("idle");
-  const [databaseUrl, setDatabaseUrl] = useState("");
-  const [supabaseProjectUrl, setSupabaseProjectUrl] = useState("");
+  const [supabaseUrl, setSupabaseUrl] = useState("");
   const [showHelp, setShowHelp] = useState(false);
 
   const validateMutation = useMutation({
     mutationFn: () =>
       apiClient.post<ValidateResponse>("/setup/validate-database", {
-        databaseUrl,
-        supabaseProjectUrl: supabaseProjectUrl || undefined,
+        supabaseProjectUrl: supabaseUrl,
       }),
     onSuccess: () => setStep("validated"),
     onError: () => setStep("idle"),
@@ -43,8 +41,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
   const initSchemaMutation = useMutation({
     mutationFn: () =>
       apiClient.post<InitializeResponse>("/setup/initialize-schema", {
-        databaseUrl,
-        supabaseProjectUrl: supabaseProjectUrl || undefined,
+        supabaseProjectUrl: supabaseUrl,
       }),
     onSuccess: () => {
       setStep("initializing");
@@ -63,7 +60,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
   });
 
   const handleSubmit = () => {
-    if (step === "idle" && databaseUrl.trim()) {
+    if (step === "idle" && supabaseUrl.trim()) {
       setStep("validating");
       validateMutation.mutate();
     } else if (step === "validated") {
@@ -86,7 +83,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
   };
 
   const isSubmitDisabled =
-    !databaseUrl.trim() ||
+    !supabaseUrl.trim() ||
     validateMutation.isPending ||
     initSchemaMutation.isPending ||
     completeMutation.isPending;
@@ -106,11 +103,11 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
           {/* Content based on step */}
           {step === "idle" || step === "validating" ? (
             <>
-              {/* Database URL Field */}
-              <div className="mb-4">
+              {/* Supabase Project URL Field */}
+              <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <label htmlFor="database-url" className="text-sm font-semibold text-white">
-                    URL de conexión PostgreSQL
+                  <label htmlFor="supabase-url" className="text-sm font-semibold text-white">
+                    URL de tu Proyecto Supabase
                   </label>
                   <button
                     type="button"
@@ -122,29 +119,14 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
                   </button>
                 </div>
                 <input
-                  id="database-url"
-                  type="text"
-                  value={databaseUrl}
-                  onChange={(e) => setDatabaseUrl(e.target.value)}
-                  placeholder="postgresql://user:password@host:5432/database"
-                  className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-[#374151] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
-                  disabled={validateMutation.isPending}
-                />
-              </div>
-
-              {/* Supabase Project URL Field */}
-              <div className="mb-6">
-                <label htmlFor="supabase-url" className="text-sm font-semibold text-white block mb-2">
-                  URL del Proyecto Supabase (opcional)
-                </label>
-                <input
                   id="supabase-url"
                   type="text"
-                  value={supabaseProjectUrl}
-                  onChange={(e) => setSupabaseProjectUrl(e.target.value)}
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
                   placeholder="https://xyzabc.supabase.co"
-                  className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-[#374151] text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full px-4 py-3 rounded-lg bg-[#374151] border border-[#4B5563] text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition"
                   disabled={validateMutation.isPending}
+                  autoFocus
                 />
               </div>
 
@@ -160,7 +142,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitDisabled}
-                className="w-full py-2 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold transition flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold transition flex items-center justify-center gap-2"
               >
                 {validateMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Verificar conexión
@@ -169,36 +151,25 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
           ) : step === "validated" ? (
             <>
               {/* Success indicator */}
-              <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-emerald-400">Conexión válida ✅</p>
+              <div className="mb-6 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex gap-2">
+                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-emerald-400">Conexión válida ✅</p>
+                  <p className="text-xs text-emerald-300 mt-1">Procederemos a inicializar el schema</p>
+                </div>
               </div>
 
-              {/* Database URL Field (disabled) */}
-              <div className="mb-4">
-                <label htmlFor="database-url" className="text-sm font-semibold text-white block mb-2">
-                  URL de conexión PostgreSQL
-                </label>
-                <input
-                  id="database-url"
-                  type="text"
-                  value={databaseUrl}
-                  disabled
-                  className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-[#374151] text-gray-500 cursor-not-allowed"
-                />
-              </div>
-
-              {/* Supabase Project URL Field (disabled) */}
+              {/* Supabase URL Field (disabled) */}
               <div className="mb-6">
                 <label htmlFor="supabase-url" className="text-sm font-semibold text-white block mb-2">
-                  URL del Proyecto Supabase
+                  URL de tu Proyecto Supabase
                 </label>
                 <input
                   id="supabase-url"
                   type="text"
-                  value={supabaseProjectUrl || "—"}
+                  value={supabaseUrl}
                   disabled
-                  className="w-full px-3 py-2 rounded-lg bg-[#111827] border border-[#374151] text-gray-500 cursor-not-allowed"
+                  className="w-full px-4 py-3 rounded-lg bg-[#374151] border border-[#4B5563] text-gray-400 cursor-not-allowed"
                 />
               </div>
 
@@ -214,7 +185,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
               <button
                 onClick={handleSubmit}
                 disabled={initSchemaMutation.isPending}
-                className="w-full py-2 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold transition flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 rounded-lg bg-emerald-500 hover:bg-emerald-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-semibold transition flex items-center justify-center gap-2"
               >
                 {initSchemaMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                 Inicializar Schema

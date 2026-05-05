@@ -57,7 +57,7 @@ export class BillingService {
         currency_id: MP_CURRENCY,
       },
       back_url: `${process.env["NEXT_PUBLIC_APP_URL"]}/${slug}/settings/billing`,
-      external_reference: organizationId,
+      external_reference: organizationId, // Así Mercado Pago identifica que org pagó
       payer_email: "", // Will be set from user's email during checkout
       metadata: {
         plan: planId,

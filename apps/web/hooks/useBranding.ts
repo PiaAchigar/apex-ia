@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/lib/api-client";
+import { apiClient, ApiError } from "@/lib/api-client";
 
 export interface BrandingConfig {
   logoUrl: string | null;
@@ -22,14 +22,30 @@ export interface UpdateBrandingInput {
 
 const QUERY_KEY = ["branding"];
 
+const DEFAULT_BRANDING: BrandingConfig = {
+  logoUrl: null,
+  primaryColor: "#10B981",
+  accentColor: "#10B981",
+  appName: "Apex IA",
+  customDomain: null,
+  whitelabelEnabled: false,
+};
+
 export function useBranding() {
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const data = await apiClient.get<BrandingConfig>("/settings/branding");
-      return data;
+      try {
+        const data = await apiClient.get<BrandingConfig>("/settings/branding");
+        return data;
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 403) {
+          return DEFAULT_BRANDING;
+        }
+        throw error;
+      }
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -54,9 +70,9 @@ export function useBranding() {
   });
 
   return {
-    branding: query.data,
+    branding: query.data || DEFAULT_BRANDING,
     isLoading: query.isLoading,
-    isError: query.isError,
+    isError: query.isError && query.error,
     error: query.error,
     updateBranding: updateBrandingMutation.mutateAsync,
     updateDomain: updateDomainMutation.mutateAsync,

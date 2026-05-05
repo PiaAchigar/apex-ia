@@ -45,7 +45,7 @@ export function PipelineDealCreateModal({
       return;
     }
 
-    if (formData.amount === "" || formData.amount <= 0) {
+    if (formData.amount === "" || Number(formData.amount) <= 0) {
       setError("El monto debe ser mayor a 0");
       return;
     }
