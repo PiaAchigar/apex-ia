@@ -5,12 +5,12 @@ import Image from "next/image";
 export function ComplexaFooter() {
   return (
     <footer className="border-t border-gray-700 bg-gray-900 px-6 py-4">
-      <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+      <div className="flex items-center justify-center gap-3 text-xs text-gray-500">
         <Image
-          src="/logo.svg"
+          src="/c_sin_fondo.png"
           alt="Complexa IA"
-          width={16}
-          height={16}
+          width={20}
+          height={20}
           className="opacity-60"
         />
         <span>

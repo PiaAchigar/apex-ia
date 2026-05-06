@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     "IA",
   ],
   authors: [{ name: "Apex IA" }],
-  creator: "Apex IA",
+  creator: "Complexa IA",
   metadataBase: new URL(
     process.env["NEXT_PUBLIC_APP_URL"] ?? "https://www.apex-ia.com.ar"
   ),
@@ -56,14 +56,14 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Apex IA",
-    description: "CRM Omnicanal con IA para PyMEs latinoamericanas",
+    description: "CRM Omnicanal, con automatización en la personalización de mensajes.",
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: "/c_sin_fondo.png",
   },
 };
 
