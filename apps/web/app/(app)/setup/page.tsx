@@ -2,20 +2,21 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, Circle, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle, Circle, Loader2, AlertCircle, Upload, X } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import {
   HelpDatabaseSetupModal,
   HelpDatabaseButton,
 } from "@/components/setup/HelpDatabaseSetupModal";
 
-type Tab = 1 | 2 | 3 | 4;
+type Tab = 1 | 2 | 3 | 4 | 5;
 
 interface TabStatus {
   1: "idle" | "validating" | "done" | "error";
   2: "idle" | "initializing" | "done" | "error";
-  3: "idle" | "done";
-  4: "idle";
+  3: "idle" | "uploading" | "done";
+  4: "idle" | "done";
+  5: "idle";
 }
 
 const API_URL = process.env["NEXT_PUBLIC_API_URL"] ?? "http://localhost:3001";
@@ -31,6 +32,7 @@ export default function SetupPage() {
     2: "idle",
     3: "idle",
     4: "idle",
+    5: "idle",
   });
 
   const [databaseUrl, setDatabaseUrl] = useState("");
@@ -41,6 +43,15 @@ export default function SetupPage() {
   const [channelsConnected, setChannelsConnected] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  // Branding state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
+  const [primaryColor, setPrimaryColor] = useState("#10B981");
+  const [accentColor, setAccentColor] = useState("#10B981");
+  const [brandingError, setBrandingError] = useState<string | null>(null);
+  const [isSavingBranding, setIsSavingBranding] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -115,6 +126,60 @@ export default function SetupPage() {
     }
   };
 
+  const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setBrandingError("Por favor selecciona una imagen válida");
+      return;
+    }
+
+    setLogoFile(file);
+    setBrandingError(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLogoPreviewUrl(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveBranding = async () => {
+    setIsSavingBranding(true);
+    setBrandingError(null);
+
+    try {
+      const res = await fetch(`${API_URL}/settings/branding`, {
+        method: "PUT",
+        headers: headers(),
+        body: JSON.stringify({
+          logoUrl: logoPreviewUrl || null,
+          primaryColor,
+          accentColor,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setTabStatus((s) => ({ ...s, 3: "done" }));
+        setActiveTab(4);
+      } else {
+        setBrandingError(data.error?.message ?? "Error al guardar branding");
+      }
+    } catch (error) {
+      setBrandingError("No se pudo conectar con el servidor");
+    } finally {
+      setIsSavingBranding(false);
+    }
+  };
+
+  const handleSkipBranding = () => {
+    setTabStatus((s) => ({ ...s, 3: "done" }));
+    setActiveTab(4);
+  };
+
   const handleCompleteSetup = async () => {
     setIsCompleting(true);
     try {
@@ -130,7 +195,8 @@ export default function SetupPage() {
 
   const canGoToTab2 = tabStatus[1] === "done";
   const canGoToTab3 = tabStatus[2] === "done";
-  const canGoToTab4 = channelsConnected >= 1;
+  const canGoToTab4 = tabStatus[3] === "done" || tabStatus[3] === "idle";
+  const canGoToTab5 = channelsConnected >= 1;
 
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
@@ -143,27 +209,29 @@ export default function SetupPage() {
         </p>
 
         {/* Tab navigation */}
-        <div className="mb-6 flex rounded-xl border border-gray-700 bg-gray-800 p-1">
+        <div className="mb-6 flex rounded-xl border border-gray-700 bg-gray-800 p-1 overflow-x-auto">
           {(
             [
               { id: 1, label: "Base de Datos" },
               { id: 2, label: "Schema" },
-              { id: 3, label: "Canales" },
-              { id: 4, label: "Confirmación" },
+              { id: 3, label: "Marca" },
+              { id: 4, label: "Canales" },
+              { id: 5, label: "Confirmación" },
             ] as const
           ).map(({ id, label }) => {
             const enabled =
               id === 1 ||
               (id === 2 && canGoToTab2) ||
               (id === 3 && canGoToTab3) ||
-              (id === 4 && canGoToTab4);
+              (id === 4 && canGoToTab4) ||
+              (id === 5 && canGoToTab5);
 
             return (
               <button
                 key={id}
                 onClick={() => enabled && setActiveTab(id)}
                 disabled={!enabled}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors
+                className={`flex-1 min-w-max rounded-lg py-2 px-2 text-sm font-medium transition-colors
                   ${activeTab === id
                     ? "bg-emerald-600 text-white"
                     : enabled
@@ -221,24 +289,22 @@ export default function SetupPage() {
 
               {/* Validation status */}
               <div className="flex items-center gap-2 text-sm">
-                {tabStatus[1] === "validating" && (
+                {dbError && (
+                  <>
+                    <AlertCircle size={16} className="text-red-400" />
+                    <span className="text-red-400">{dbError}</span>
+                  </>
+                )}
+                {!dbError && tabStatus[1] === "validating" && (
                   <>
                     <Loader2 size={16} className="animate-spin text-emerald-400" />
                     <span className="text-gray-400">Verificando conexión...</span>
                   </>
                 )}
-                {tabStatus[1] === "done" && (
+                {!dbError && tabStatus[1] === "done" && (
                   <>
                     <CheckCircle size={16} className="text-emerald-400" />
                     <span className="text-emerald-400">Conexión válida ✅</span>
-                  </>
-                )}
-                {tabStatus[1] === "error" && (
-                  <>
-                    <AlertCircle size={16} className="text-red-400" />
-                    <span className="text-red-400">
-                      {dbError ?? "No se pudo conectar"}
-                    </span>
                   </>
                 )}
               </div>
@@ -312,8 +378,156 @@ export default function SetupPage() {
           </div>
         )}
 
-        {/* Tab 3: Connect Channels */}
+        {/* Tab 3: Branding (NEW) */}
         {activeTab === 3 && (
+          <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <h2 className="mb-4 text-lg font-semibold text-white">
+              Personaliza tu Marca
+            </h2>
+            <p className="mb-5 text-sm text-gray-400">
+              Agregá tu logo y colores. Podés cambiar esto después desde settings.
+            </p>
+
+            <div className="space-y-4">
+              {/* Logo Upload */}
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Logo
+                </label>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full rounded-lg border-2 border-dashed border-gray-600 bg-gray-900 px-4 py-8 text-center cursor-pointer hover:border-emerald-500 transition-colors"
+                >
+                  {logoPreviewUrl ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <img
+                        src={logoPreviewUrl}
+                        alt="Logo preview"
+                        className="h-16 w-16 object-contain"
+                      />
+                      <p className="text-xs text-gray-400">{logoFile?.name}</p>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLogoFile(null);
+                          setLogoPreviewUrl(null);
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload size={24} className="text-gray-500" />
+                      <p className="text-sm text-gray-400">
+                        Haz clic para subir tu logo
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        (PNG, JPG, SVG · máx 2MB)
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoFileSelect}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Color Pickers */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Color Primario
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="h-10 w-12 rounded-lg border border-gray-600 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={primaryColor}
+                      onChange={(e) => setPrimaryColor(e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-2 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-300">
+                    Color Acentó
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="h-10 w-12 rounded-lg border border-gray-600 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-2 py-2 text-sm text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Preview */}
+              {logoPreviewUrl && (
+                <div className="rounded-lg border border-gray-600 bg-gray-900 p-4">
+                  <p className="mb-2 text-xs text-gray-500">Preview:</p>
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={logoPreviewUrl}
+                      alt="Preview"
+                      className="h-8 w-8 object-contain"
+                    />
+                    <div className="h-6 w-1 rounded" style={{ backgroundColor: primaryColor }} />
+                    <p className="text-sm text-gray-300">Tu marca con los colores elegidos</p>
+                  </div>
+                </div>
+              )}
+
+              {brandingError && (
+                <div className="flex items-center gap-2 text-sm text-red-400">
+                  <AlertCircle size={16} />
+                  {brandingError}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-between">
+              <button
+                onClick={handleSkipBranding}
+                className="rounded-lg border border-gray-600 px-5 py-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+              >
+                Omitir por ahora
+              </button>
+              <button
+                onClick={handleSaveBranding}
+                disabled={isSavingBranding}
+                className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white disabled:opacity-60 hover:bg-emerald-700 flex items-center gap-2"
+              >
+                {isSavingBranding && <Loader2 size={14} className="animate-spin" />}
+                Continuar →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Connect Channels */}
+        {activeTab === 4 && (
           <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">
               Conectar Canales
@@ -348,8 +562,8 @@ export default function SetupPage() {
 
             <div className="mt-6 flex justify-end">
               <button
-                disabled={!canGoToTab4}
-                onClick={() => setActiveTab(4)}
+                disabled={!canGoToTab5}
+                onClick={() => setActiveTab(5)}
                 className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40 hover:bg-emerald-700"
               >
                 Siguiente →
@@ -358,8 +572,8 @@ export default function SetupPage() {
           </div>
         )}
 
-        {/* Tab 4: Confirmation */}
-        {activeTab === 4 && (
+        {/* Tab 5: Confirmation */}
+        {activeTab === 5 && (
           <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
             <h2 className="mb-6 text-lg font-semibold text-white">
               ¡Todo listo para empezar! 🎉
@@ -376,6 +590,12 @@ export default function SetupPage() {
                 <CheckCircle size={18} className="text-emerald-400" />
                 <span className="text-gray-300">
                   Schema inicializado ({tablesCreated.length} tablas)
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <CheckCircle size={18} className="text-emerald-400" />
+                <span className="text-gray-300">
+                  Marca personalizada
                 </span>
               </div>
               <div className="flex items-center gap-3 text-sm">

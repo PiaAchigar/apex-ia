@@ -1,23 +1,20 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient, ApiError } from "@/lib/api-client";
+import { apiClient } from "@/lib/api-client";
 
 export interface BrandingConfig {
   logoUrl: string | null;
   primaryColor: string;
   accentColor: string;
-  appName: string;
-  customDomain: string | null;
-  whitelabelEnabled: boolean;
+  faviconUrl: string | null;
 }
 
 export interface UpdateBrandingInput {
   logoUrl?: string | null;
   primaryColor?: string;
   accentColor?: string;
-  appName?: string;
-  whitelabelEnabled?: boolean;
+  faviconUrl?: string | null;
 }
 
 const QUERY_KEY = ["branding"];
@@ -26,9 +23,7 @@ const DEFAULT_BRANDING: BrandingConfig = {
   logoUrl: null,
   primaryColor: "#10B981",
   accentColor: "#10B981",
-  appName: "Apex IA",
-  customDomain: null,
-  whitelabelEnabled: false,
+  faviconUrl: null,
 };
 
 export function useBranding() {
@@ -37,15 +32,8 @@ export function useBranding() {
   const query = useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      try {
-        const data = await apiClient.get<BrandingConfig>("/settings/branding");
-        return data;
-      } catch (error) {
-        if (error instanceof ApiError && error.status === 403) {
-          return DEFAULT_BRANDING;
-        }
-        throw error;
-      }
+      const data = await apiClient.get<BrandingConfig>("/settings/branding");
+      return data;
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,
@@ -60,23 +48,12 @@ export function useBranding() {
     },
   });
 
-  const updateDomainMutation = useMutation({
-    mutationFn: async (customDomain: string | null) => {
-      await apiClient.put("/settings/branding/domain", { customDomain });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
-    },
-  });
-
   return {
     branding: query.data || DEFAULT_BRANDING,
     isLoading: query.isLoading,
-    isError: query.isError && query.error,
+    isError: query.isError,
     error: query.error,
     updateBranding: updateBrandingMutation.mutateAsync,
-    updateDomain: updateDomainMutation.mutateAsync,
     isUpdatingBranding: updateBrandingMutation.isPending,
-    isUpdatingDomain: updateDomainMutation.isPending,
   };
 }

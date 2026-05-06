@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   authors: [{ name: "Apex IA" }],
   creator: "Apex IA",
   metadataBase: new URL(
-    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://apexia.com"
+    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://www.apex-ia.com.ar"
   ),
   openGraph: {
     type: "website",
@@ -61,6 +61,9 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+  },
+  icons: {
+    icon: "/favicon.ico",
   },
 };
 

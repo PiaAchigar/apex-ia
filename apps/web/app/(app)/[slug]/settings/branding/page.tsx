@@ -1,296 +1,247 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, Upload } from "lucide-react";
 import { useBranding } from "@/hooks/useBranding";
-import { useBillingStatus } from "@/hooks/useBillingStatus";
 
 export default function BrandingPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const { branding, isLoading, updateBranding, updateDomain, isUpdatingBranding, isUpdatingDomain } = useBranding();
-  const { data: billingData } = useBillingStatus();
-  const plan = billingData?.plan;
+  const { branding, isLoading, updateBranding, isUpdatingBranding } = useBranding();
 
-  // Form state
-  const [appName, setAppName] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#10B981");
   const [accentColor, setAccentColor] = useState("#10B981");
-  const [customDomain, setCustomDomain] = useState("");
-  const [whitelabelEnabled, setWhitelabelEnabled] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
-  const [showDomainPreview, setShowDomainPreview] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form with branding data
   useEffect(() => {
     if (branding) {
-      setAppName(branding.appName);
-      setLogoUrl(branding.logoUrl || "");
+      setLogoPreviewUrl(branding.logoUrl || null);
       setPrimaryColor(branding.primaryColor);
       setAccentColor(branding.accentColor);
-      setCustomDomain(branding.customDomain || "");
-      setWhitelabelEnabled(branding.whitelabelEnabled);
     }
   }, [branding]);
 
-  const isBusiness = plan === "business";
+  const handleLogoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleSaveBranding = async () => {
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Por favor selecciona una imagen válida");
+      return;
+    }
+
+    setLogoFile(file);
+    setSaveError("");
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setLogoPreviewUrl(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async () => {
     setSaveError("");
     setSaveSuccess(false);
 
     try {
       await updateBranding({
-        appName: appName.trim() || "Apex IA",
-        logoUrl: logoUrl.trim() || null,
+        logoUrl: logoPreviewUrl || null,
         primaryColor,
         accentColor,
-        whitelabelEnabled: isBusiness ? whitelabelEnabled : false,
       });
       setSaveSuccess(true);
+      setLogoFile(null);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      const error = err as any;
-      setSaveError(error.message || "Error al guardar branding");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Error al guardar");
     }
   };
 
-  const handleSaveDomain = async () => {
-    setSaveError("");
-    setSaveSuccess(false);
-
-    try {
-      await updateDomain(customDomain.trim() || null);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err) {
-      const error = err as any;
-      setSaveError(error.message || "Error al guardar dominio");
-    }
-  };
-
-  if (!isBusiness) {
+  if (isLoading) {
     return (
-      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#111827]">
-        <div className="p-6 max-w-4xl mx-auto">
-          <Link
-            href={`/${slug}/settings`}
-            className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-flex items-center gap-1"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Configuración
-          </Link>
-
-          <div className="bg-amber-500/15 border border-amber-500/25 rounded-lg p-6 mt-6">
-            <div className="flex gap-4">
-              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-white font-semibold">Plan Business requerido</h3>
-                <p className="text-gray-400 text-sm mt-1">
-                  La personalización de marca está disponible solo en el plan Business. Actualiza tu plan para acceder a esta funcionalidad.
-                </p>
-                <button
-                  onClick={() => (window.location.href = `/${slug}/settings/billing`)}
-                  className="mt-4 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  Actualizar plan
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={24} className="animate-spin text-emerald-500" />
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden bg-[#111827]">
-      <div className="p-6 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href={`/${slug}/settings`}
-            className="text-emerald-400 hover:text-emerald-300 text-sm mb-4 inline-flex items-center gap-1"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Configuración
-          </Link>
-          <h1 className="text-3xl font-bold text-white mb-2">Marca</h1>
-          <p className="text-gray-400">Personaliza cómo se ve tu instancia de Apex IA</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Link href={`/${slug}/settings`}>
+          <ArrowLeft size={20} className="text-gray-400 hover:text-gray-300 cursor-pointer" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-white">Personalizar Marca</h1>
+          <p className="text-sm text-gray-400">Logo, colores y branding visual</p>
         </div>
+      </div>
 
-        {/* Success/Error messages */}
-        {saveSuccess && (
-          <div className="mb-4 p-4 bg-emerald-500/15 border border-emerald-500/25 rounded-lg text-emerald-400 text-sm">
-            ✓ Cambios guardados exitosamente
-          </div>
-        )}
-        {saveError && (
-          <div className="mb-4 p-4 bg-red-500/15 border border-red-500/25 rounded-lg text-red-400 text-sm flex gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            {saveError}
-          </div>
-        )}
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Form */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Logo Section */}
+          <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <h2 className="mb-4 text-lg font-semibold text-white">Logo</h2>
 
-        {/* Content */}
-        {isLoading ? (
-          <div className="flex items-center justify-center h-48">
-            <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Branding Section */}
-            <div className="bg-[#1F2937] border border-[#374151] rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Configuración de marca</h2>
-
-              {/* App Name */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Nombre de la aplicación</label>
-                <input
-                  type="text"
-                  value={appName}
-                  onChange={(e) => setAppName(e.target.value)}
-                  placeholder="Apex IA"
-                  className="w-full bg-[#111827] border border-[#374151] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-                <p className="text-xs text-gray-500 mt-1">Se mostrará en la barra lateral</p>
-              </div>
-
-              {/* Logo URL */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">URL del logo</label>
-                <input
-                  type="url"
-                  value={logoUrl}
-                  onChange={(e) => setLogoUrl(e.target.value)}
-                  placeholder="https://example.com/logo.png"
-                  className="w-full bg-[#111827] border border-[#374151] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-                <p className="text-xs text-gray-500 mt-1">Imagen cuadrada, idealmente 256x256px o mayor</p>
-              </div>
-
-              {/* Colors */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Color primario</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg cursor-pointer border border-[#374151]"
-                    />
-                    <input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="flex-1 bg-[#111827] border border-[#374151] rounded-lg px-3 py-1 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Color acentuado</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-12 h-10 rounded-lg cursor-pointer border border-[#374151]"
-                    />
-                    <input
-                      type="text"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="flex-1 bg-[#111827] border border-[#374151] rounded-lg px-3 py-1 text-white text-sm placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Whitelabel Toggle */}
-              <div className="mb-6 pb-6 border-b border-[#374151]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300">Ocultar "Powered by Apex IA"</label>
-                    <p className="text-xs text-gray-500 mt-1">Tu marca se mostrará como si fuera tu propia aplicación</p>
-                  </div>
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full rounded-lg border-2 border-dashed border-gray-600 bg-gray-900 px-4 py-8 text-center cursor-pointer hover:border-emerald-500 transition-colors"
+            >
+              {logoPreviewUrl ? (
+                <div className="flex flex-col items-center gap-2">
+                  <img
+                    src={logoPreviewUrl}
+                    alt="Logo preview"
+                    className="h-16 w-16 object-contain"
+                  />
+                  <p className="text-xs text-gray-400">{logoFile?.name || "Logo actual"}</p>
                   <button
-                    onClick={() => setWhitelabelEnabled(!whitelabelEnabled)}
-                    className={`relative w-12 h-6 rounded-full transition-colors ${
-                      whitelabelEnabled ? "bg-emerald-500" : "bg-[#374151]"
-                    }`}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLogoFile(null);
+                      setLogoPreviewUrl(null);
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="text-xs text-red-400 hover:text-red-300"
                   >
-                    <div
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-                        whitelabelEnabled ? "translate-x-6" : ""
-                      }`}
-                    />
+                    Remover
                   </button>
                 </div>
-              </div>
-
-              <button
-                onClick={handleSaveBranding}
-                disabled={isUpdatingBranding}
-                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                {isUpdatingBranding && <Loader2 className="w-4 h-4 animate-spin" />}
-                Guardar cambios
-              </button>
-            </div>
-
-            {/* Domain Section */}
-            <div className="bg-[#1F2937] border border-[#374151] rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-6">Dominio personalizado</h2>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Dominio</label>
-                <input
-                  type="text"
-                  value={customDomain}
-                  onChange={(e) => setCustomDomain(e.target.value)}
-                  placeholder="app.ejemplo.com"
-                  className="w-full bg-[#111827] border border-[#374151] rounded-lg px-4 py-2 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                />
-                <p className="text-xs text-gray-500 mt-1">Dejar vacío para usar el dominio predeterminado</p>
-              </div>
-
-              {customDomain && (
-                <div className="mb-6 p-4 bg-blue-500/15 border border-blue-500/25 rounded-lg">
-                  <div className="flex items-center gap-2 mb-3 cursor-pointer" onClick={() => setShowDomainPreview(!showDomainPreview)}>
-                    {showDomainPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    <span className="text-sm font-medium text-blue-400">
-                      {showDomainPreview ? "Ocultar" : "Mostrar"} instrucciones DNS
-                    </span>
-                  </div>
-                  {showDomainPreview && (
-                    <div className="text-xs text-gray-400 space-y-2">
-                      <p>Para usar este dominio, configura los siguientes records en tu proveedor DNS:</p>
-                      <code className="block bg-[#111827] p-2 rounded text-gray-300 mt-2">
-                        CNAME {customDomain} → apex-ia.vercel.app
-                      </code>
-                      <p className="mt-2">Los cambios pueden tomar hasta 48 horas en propagarse.</p>
-                    </div>
-                  )}
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <Upload size={24} className="text-gray-500" />
+                  <p className="text-sm text-gray-400">Haz clic para subir tu logo</p>
+                  <p className="text-xs text-gray-600">(PNG, JPG, SVG · máx 2MB)</p>
                 </div>
               )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleLogoFileSelect}
+              className="hidden"
+            />
+          </div>
 
-              <button
-                onClick={handleSaveDomain}
-                disabled={isUpdatingDomain}
-                className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center gap-2"
-              >
-                {isUpdatingDomain && <Loader2 className="w-4 h-4 animate-spin" />}
-                Guardar dominio
-              </button>
+          {/* Colors Section */}
+          <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <h2 className="mb-4 text-lg font-semibold text-white">Colores</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Color Primario
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="h-10 w-12 rounded-lg border border-gray-600 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Color Acentó
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="h-10 w-12 rounded-lg border border-gray-600 cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="flex-1 rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white"
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Messages */}
+          {saveError && (
+            <div className="flex items-center gap-2 rounded-lg border border-red-900 bg-red-900/20 p-4 text-red-400">
+              <AlertCircle size={16} />
+              {saveError}
+            </div>
+          )}
+          {saveSuccess && (
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-900 bg-emerald-900/20 p-4 text-emerald-400">
+              ✓ Cambios guardados exitosamente
+            </div>
+          )}
+
+          {/* Save Button */}
+          <button
+            onClick={handleSave}
+            disabled={isUpdatingBranding}
+            className="w-full rounded-lg bg-emerald-600 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 flex items-center justify-center gap-2"
+          >
+            {isUpdatingBranding && <Loader2 size={16} className="animate-spin" />}
+            Guardar Cambios
+          </button>
+        </div>
+
+        {/* Preview */}
+        <div className="rounded-xl border border-gray-700 bg-gray-800 p-6 h-fit">
+          <h2 className="mb-4 text-lg font-semibold text-white">Preview</h2>
+          <div className="space-y-4">
+            {logoPreviewUrl && (
+              <div className="rounded-lg border border-gray-600 bg-gray-900 p-4">
+                <p className="mb-3 text-xs text-gray-500">Tu logo:</p>
+                <img
+                  src={logoPreviewUrl}
+                  alt="Preview"
+                  className="mx-auto h-12 w-12 object-contain"
+                />
+              </div>
+            )}
+
+            <div className="rounded-lg border border-gray-600 bg-gray-900 p-4">
+              <p className="mb-3 text-xs text-gray-500">Paleta de colores:</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-8 w-8 rounded-lg border border-gray-600"
+                    style={{ backgroundColor: primaryColor }}
+                  />
+                  <span className="text-xs text-gray-400">Primario</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-8 w-8 rounded-lg border border-gray-600"
+                    style={{ backgroundColor: accentColor }}
+                  />
+                  <span className="text-xs text-gray-400">Acentó</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -32,7 +32,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
   const validateMutation = useMutation({
     mutationFn: () =>
       apiClient.post<ValidateResponse>("/setup/validate-database", {
-        supabaseProjectUrl: supabaseUrl,
+        databaseUrl: supabaseUrl,
       }),
     onSuccess: () => setStep("validated"),
     onError: () => setStep("idle"),
@@ -41,7 +41,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
   const initSchemaMutation = useMutation({
     mutationFn: () =>
       apiClient.post<InitializeResponse>("/setup/initialize-schema", {
-        supabaseProjectUrl: supabaseUrl,
+        databaseUrl: supabaseUrl,
       }),
     onSuccess: () => {
       setStep("initializing");
@@ -107,7 +107,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <label htmlFor="supabase-url" className="text-sm font-semibold text-white">
-                    URL de tu Proyecto Supabase
+                    Connection String de tu Base de Datos
                   </label>
                   <button
                     type="button"
@@ -123,7 +123,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
                   type="text"
                   value={supabaseUrl}
                   onChange={(e) => setSupabaseUrl(e.target.value)}
-                  placeholder="https://xyzabc.supabase.co"
+                  placeholder="postgresql://user:password@host:port/database"
                   className="w-full px-4 py-3 rounded-lg bg-[#374151] border border-[#4B5563] text-white placeholder-gray-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition"
                   disabled={validateMutation.isPending}
                   autoFocus
@@ -162,7 +162,7 @@ export function SetupRequiredModal({ onSetupComplete }: SetupRequiredModalProps)
               {/* Supabase URL Field (disabled) */}
               <div className="mb-6">
                 <label htmlFor="supabase-url" className="text-sm font-semibold text-white block mb-2">
-                  URL de tu Proyecto Supabase
+                  Connection String de tu Base de Datos
                 </label>
                 <input
                   id="supabase-url"

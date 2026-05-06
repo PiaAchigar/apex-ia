@@ -57,7 +57,7 @@ export function HelpDatabaseSetupModal({ onClose }: HelpDatabaseSetupModalProps)
               3
             </span>
             <span>
-              Andá a <strong className="text-white">Settings → Database → Connection pooling</strong>.
+              Andá a <strong className="text-white"> la parte superior → Connect → Connect to your project → Direct</strong>.
             </span>
           </li>
           <li className="flex gap-3">
@@ -65,7 +65,7 @@ export function HelpDatabaseSetupModal({ onClose }: HelpDatabaseSetupModalProps)
               4
             </span>
             <span>
-              En <strong className="text-white">Session mode</strong>, copiá la{" "}
+              Hace scroll hasta, copiá la{" "}
               <strong className="text-white">Connection string</strong>.
               <br />
               <code className="mt-1 block rounded bg-gray-900 px-2 py-1 text-xs text-emerald-300">
@@ -82,8 +82,7 @@ export function HelpDatabaseSetupModal({ onClose }: HelpDatabaseSetupModalProps)
         </ol>
 
         <div className="mt-5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
-          <strong>⚠️ Importante:</strong> Esta URL contiene la contraseña de tu base de datos.
-          Apex IA la guarda encriptada con AES-256-GCM y nunca la expone.
+          <strong>⚠️ Importante:</strong> Esta URL Apex IA la guarda encriptada con AES-256-GCM y nunca la expone.
         </div>
 
         <div className="mt-4 flex justify-end gap-3">

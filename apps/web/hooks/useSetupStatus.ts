@@ -18,8 +18,8 @@ export function useSetupStatus() {
   });
 
   return {
-    isComplete: query.data?.isComplete ?? true,
+    isComplete: query.data?.isComplete ?? false,
     plan: query.data?.plan ?? "",
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || query.isError,
   };
 }

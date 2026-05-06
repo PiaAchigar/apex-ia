@@ -1,7 +1,7 @@
 import postgres from "postgres";
 import { logger } from "./logger.js";
 
-const SUPABASE_HOST_PATTERN = /supabase\.co$/;
+const SUPABASE_HOST_PATTERN = /(supabase\.co|pooler\.supabase\.com)$/;
 const POSTGRES_PROTOCOL_PATTERN = /^postgresql:\/\//;
 
 export interface DatabaseValidationResult {
@@ -32,11 +32,18 @@ export async function validateClientDatabaseUrl(
   // 3. Try actual connection
   let client: postgres.Sql | null = null;
   try {
-    client = postgres(databaseUrl, {
+    const isPooler = parsedUrl.hostname?.includes('pooler');
+    const clientOptions: any = {
       max: 1,
       connect_timeout: 10,
       idle_timeout: 5,
-    });
+    };
+
+    if (isPooler) {
+      clientOptions.ssl = 'require';
+    }
+
+    client = postgres(databaseUrl, clientOptions);
 
     await client`SELECT 1`;
 
@@ -52,7 +59,7 @@ export async function validateClientDatabaseUrl(
 export function validateSupabaseProjectUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return SUPABASE_HOST_PATTERN.test(parsed.hostname) && parsed.protocol === "https:";
+    return /supabase\.co$/.test(parsed.hostname) && parsed.protocol === "https:";
   } catch {
     return false;
   }
