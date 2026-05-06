@@ -24,7 +24,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Apex IA — CRM Omnicanal para PyMEs",
+    default: "Apex IA — CRM Omnicanal para tu Empresa.",
     template: "%s | Apex IA",
   },
   description:
