@@ -8,18 +8,18 @@ export interface CreateCustomFieldInput {
   fieldKey: string;
   label: string;
   fieldType: "text" | "number" | "date" | "boolean" | "select";
-  options?: string[];
-  isRequired?: boolean;
-  displayOrder?: number;
+  options?: string[] | undefined;
+  isRequired?: boolean | undefined;
+  displayOrder?: number | undefined;
 }
 
 export interface UpdateCustomFieldInput {
-  label?: string;
-  fieldType?: "text" | "number" | "date" | "boolean" | "select";
-  options?: string[];
-  isRequired?: boolean;
-  displayOrder?: number;
-  isActive?: boolean;
+  label?: string | undefined;
+  fieldType?: "text" | "number" | "date" | "boolean" | "select" | undefined;
+  options?: string[] | undefined;
+  isRequired?: boolean | undefined;
+  displayOrder?: number | undefined;
+  isActive?: boolean | undefined;
 }
 
 export class CustomFieldsService {
@@ -94,9 +94,10 @@ export class CustomFieldsService {
     const result = await this.tenantDb
       .update(customFieldDefinitions)
       .set({ isActive: false })
-      .where(eq(customFieldDefinitions.id, fieldId));
+      .where(eq(customFieldDefinitions.id, fieldId))
+      .returning();
 
-    if (!result.rowCount || result.rowCount === 0) {
+    if (!result.length) {
       throw new Error("Custom field not found");
     }
   }

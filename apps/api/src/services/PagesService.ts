@@ -6,14 +6,14 @@ import { logger } from "../utils/logger.js";
 export interface CreatePageInput {
   slug: string;
   title: string;
-  content?: string;
-  isPublished?: boolean;
+  content?: string | undefined;
+  isPublished?: boolean | undefined;
 }
 
 export interface UpdatePageInput {
-  title?: string;
-  content?: string;
-  isPublished?: boolean;
+  title?: string | undefined;
+  content?: string | undefined;
+  isPublished?: boolean | undefined;
 }
 
 export type PageResponse = {

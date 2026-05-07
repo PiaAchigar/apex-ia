@@ -51,7 +51,7 @@ class DatabaseProvider {
 
     const drizzleInstance = drizzle(client, {
       schema: { ...publicSchema, ...tenantSchema },
-    }) as unknown as DrizzleDb;
+    }) as DrizzleDb;
 
     cache.set(organizationId, {
       db: drizzleInstance,

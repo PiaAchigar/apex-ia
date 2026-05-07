@@ -5,15 +5,15 @@ import { logger } from "../utils/logger.js";
 import { AiResponseService } from "./AiResponseService.js";
 
 type FlowNodeData = {
-  label?: string;
-  triggerType?: string;
-  message?: string;
-  delaySeconds?: number;
-  conditionField?: string;
-  conditionOperator?: "equals" | "not_equals" | "contains" | "starts_with";
-  conditionValue?: string;
-  prompt?: string;
-  subFlowId?: string;
+  label?: string | undefined;
+  triggerType?: string | undefined;
+  message?: string | undefined;
+  delaySeconds?: number | undefined;
+  conditionField?: string | undefined;
+  conditionOperator?: "equals" | "not_equals" | "contains" | "starts_with" | undefined;
+  conditionValue?: string | undefined;
+  prompt?: string | undefined;
+  subFlowId?: string | undefined;
   [key: string]: unknown;
 };
 
@@ -28,14 +28,14 @@ type FlowEdge = {
   id: string;
   source: string;
   target: string;
-  sourceHandle?: string;
+  sourceHandle?: string | undefined;
 };
 
 export type NodeExecution = {
   nodeId: string;
   type: string;
   status: "executed" | "skipped";
-  output?: Record<string, unknown>;
+  output?: Record<string, unknown> | undefined;
 };
 
 export type ExecutionResult = {
@@ -45,16 +45,16 @@ export type ExecutionResult = {
 
 type CreateFlowInput = {
   name: string;
-  triggerType?: string;
+  triggerType?: string | undefined;
   nodes: FlowNode[];
   edges: FlowEdge[];
 };
 
 type UpdateFlowInput = Partial<{
-  name: string;
-  triggerType: string;
-  nodes: FlowNode[];
-  edges: FlowEdge[];
+  name?: string | undefined;
+  triggerType?: string | undefined;
+  nodes?: FlowNode[] | undefined;
+  edges?: FlowEdge[] | undefined;
 }>;
 
 export class FlowBuilderService {

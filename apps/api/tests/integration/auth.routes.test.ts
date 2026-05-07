@@ -53,9 +53,9 @@ describe("POST /auth/register", () => {
     });
 
     expect(res.status).toBe(201);
-    const body = await res.json();
+    const body = await res.json() as Record<string, unknown>;
     expect(body.success).toBe(true);
-    expect(body.data.organizationSlug).toBe("acme");
+    expect((body.data as Record<string, unknown>)?.organizationSlug).toBe("acme");
   });
 
   it("debería retornar 400 con datos inválidos (email malformado)", async () => {
@@ -122,10 +122,10 @@ describe("POST /auth/login", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as Record<string, unknown>;
     expect(body.success).toBe(true);
-    expect(body.data.accessToken).toBe("access-token");
-    expect(body.data.organizationSlug).toBe("acme");
+    expect((body.data as Record<string, unknown>)?.accessToken).toBe("access-token");
+    expect((body.data as Record<string, unknown>)?.organizationSlug).toBe("acme");
   });
 
   it("debería retornar 400 sin contraseña", async () => {
@@ -155,7 +155,7 @@ describe("POST /auth/logout", () => {
     });
 
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body = await res.json() as Record<string, unknown>;
     expect(body.success).toBe(true);
   });
 });

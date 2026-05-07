@@ -6,7 +6,7 @@ declare module "hono" {
   interface ContextVariableMap {
     tenantDb: ClientDrizzleDb;
     organizationId: string;
-    orgSlug: string;
+    orgSlug: string;  // Now guaranteed to be string, never undefined
   }
 }
 

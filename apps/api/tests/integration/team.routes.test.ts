@@ -15,7 +15,13 @@ vi.mock("../../src/services/TeamService.js", () => ({
 
 vi.mock("../../src/middleware/authMiddleware.js", () => ({
   authMiddleware: vi.fn(async (c: { set: (k: string, v: unknown) => void }, next: () => Promise<void>) => {
-    c.set("auth", { userId: "user-1", organizationId: "org-1" });
+    c.set("auth", {
+      userId: "user-1",
+      organizationId: "org-1",
+      organizationSlug: "test-org",
+      roleName: "admin",
+      permissions: {},
+    });
     await next();
   }),
 }));

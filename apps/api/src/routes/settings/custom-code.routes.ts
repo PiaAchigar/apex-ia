@@ -28,7 +28,7 @@ export function createCustomCodeRoutes() {
   router.get("/", async (c) => {
     const auth = c.get("auth");
     const { organizationId } = auth;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new TenantSettingsService(tenantDb);
@@ -52,7 +52,7 @@ export function createCustomCodeRoutes() {
     const auth = c.get("auth");
     const { organizationId } = auth;
     const body = c.req.valid("json") as SaveCssInput;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new TenantSettingsService(tenantDb);
@@ -76,7 +76,7 @@ export function createCustomCodeRoutes() {
     const auth = c.get("auth");
     const { organizationId } = auth;
     const body = c.req.valid("json") as SaveJsInput;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new TenantSettingsService(tenantDb);

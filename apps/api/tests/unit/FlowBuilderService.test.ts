@@ -211,7 +211,7 @@ describe("FlowBuilderService", () => {
         {
           id: "2",
           type: "condition",
-          data: { conditionField: "channel", conditionOperator: "equals", conditionValue: "whatsapp" },
+          data: { conditionField: "channel", conditionOperator: "equals" as const, conditionValue: "whatsapp" },
           position: { x: 0, y: 100 },
         },
         { id: "3", type: "send_message", data: { message: "Para WhatsApp" }, position: { x: 0, y: 200 } },
@@ -235,7 +235,7 @@ describe("FlowBuilderService", () => {
         {
           id: "2",
           type: "condition",
-          data: { conditionField: "channel", conditionOperator: "equals", conditionValue: "whatsapp" },
+          data: { conditionField: "channel", conditionOperator: "equals" as const, conditionValue: "whatsapp" },
           position: { x: 0, y: 100 },
         },
         { id: "3", type: "delay", data: { delaySeconds: 5 }, position: { x: 100, y: 200 } },

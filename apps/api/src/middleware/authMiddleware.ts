@@ -10,7 +10,7 @@ import { ApiKeyService } from "../services/ApiKeyService.js";
 type AuthContext = {
   userId: string | null;
   organizationId: string;
-  organizationSlug?: string;
+  organizationSlug: string;
   roleId?: string;
   roleName: string;
   permissions: PermissionsJson | {};
@@ -37,9 +37,24 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
         );
       }
 
+      // Get organization slug for API key auth
+      const [orgData] = await db
+        .select({ slug: organizations.slug })
+        .from(organizations)
+        .where(eq(organizations.id, result.organizationId))
+        .limit(1);
+
+      if (!orgData?.slug) {
+        return c.json(
+          { success: false, error: { code: "ORGANIZATION_NOT_FOUND", message: "Organización no encontrada" } },
+          404
+        );
+      }
+
       c.set("auth", {
         userId: null,
         organizationId: result.organizationId,
+        organizationSlug: orgData.slug,
         roleName: "api_key",
         permissions: {},
       });

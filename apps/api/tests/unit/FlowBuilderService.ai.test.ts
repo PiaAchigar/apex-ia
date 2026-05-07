@@ -140,9 +140,11 @@ describe("FlowBuilderService — AI Response Node", () => {
     const result = await service.executeFlow(nodes, edges, { messageText: "Hola" });
 
     expect(result.steps).toHaveLength(3);
-    expect(result.steps[0].type).toBe("trigger");
-    expect(result.steps[1].type).toBe("ai_response");
-    expect(result.steps[2].type).toBe("send_message");
+    if (result.steps && result.steps.length >= 3) {
+      expect(result.steps[0]?.type).toBe("trigger");
+      expect(result.steps[1]?.type).toBe("ai_response");
+      expect(result.steps[2]?.type).toBe("send_message");
+    }
   });
 
   it("executeFlow sin organizationId no lanza excepción (usa fallback)", async () => {

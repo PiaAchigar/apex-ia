@@ -25,17 +25,7 @@ export function usePlanLimits(): UseQueryResult<PlanLimitsData, Error> {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const response = await apiClient.request<PlanLimitsResult>(
-        "/billing/plan-limits",
-        {
-          method: "GET",
-        }
-      );
-
-      if (!response.success) {
-        throw new Error(response.data?.error?.message || "Failed to fetch plan limits");
-      }
-
+      const response = await apiClient.get<PlanLimitsResult>("/billing/plan-limits");
       return response.data;
     },
     staleTime: 60_000,

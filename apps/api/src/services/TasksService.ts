@@ -8,28 +8,28 @@ type TaskStatus = "pending" | "in_progress" | "done";
 
 type CreateTaskInput = {
   title: string;
-  description?: string;
-  assignedAgentId?: string;
-  relatedContactId?: string;
-  priority?: TaskPriority;
-  dueDate?: Date;
+  description?: string | undefined;
+  assignedAgentId?: string | undefined;
+  relatedContactId?: string | undefined;
+  priority?: TaskPriority | undefined;
+  dueDate?: Date | undefined;
 };
 
 type UpdateTaskInput = Partial<{
-  title: string;
-  description: string;
-  assignedAgentId: string;
-  relatedContactId: string;
-  priority: TaskPriority;
-  status: TaskStatus;
-  dueDate: Date;
+  title?: string | undefined;
+  description?: string | undefined;
+  assignedAgentId?: string | undefined;
+  relatedContactId?: string | undefined;
+  priority?: TaskPriority | undefined;
+  status?: TaskStatus | undefined;
+  dueDate?: Date | undefined;
 }>;
 
 type GetTasksFilters = {
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  page?: number;
-  limit?: number;
+  status?: TaskStatus | undefined;
+  priority?: TaskPriority | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 };
 
 export class TasksService {

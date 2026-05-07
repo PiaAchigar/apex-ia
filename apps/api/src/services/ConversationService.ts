@@ -8,9 +8,9 @@ import type { DrizzleDb } from "../db/drizzle.js";
 import { logger } from "../utils/logger.js";
 
 type PaginationInput = {
-  page?: number;
-  limit?: number;
-  before?: string;
+  page?: number | undefined;
+  limit?: number | undefined;
+  before?: string | undefined;
 };
 
 export class ConversationService {

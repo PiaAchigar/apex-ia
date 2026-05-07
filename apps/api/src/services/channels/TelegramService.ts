@@ -38,7 +38,7 @@ export class TelegramService {
     this.botToken = token;
 
     const { Telegraf } = await import("telegraf");
-    this.bot = new Telegraf(token) as unknown as TelegramBotInstance;
+    this.bot = new Telegraf(token) as TelegramBotInstance;
 
     logger.info("Telegram bot initialized");
   }

@@ -1,5 +1,5 @@
 import { eq, and } from "drizzle-orm";
-import type { DrizzleDb } from "@apex-ia/database";
+import type { DrizzleDb } from "../db/drizzle.js";
 import { contacts, channelCredentials } from "@apex-ia/database/schema/tenant";
 import type { SocketIOInstance } from "../socket/socketServer.js";
 import { decryptCredentials } from "../utils/encryption.js";
@@ -33,23 +33,55 @@ export class ChannelDispatcherService {
     content: string
   ): Promise<void> {
     try {
-      // Get contact to obtain externalId for the channel
-      const contact = await this.tenantDb
+      // Get contact to obtain channel identifier (whatsappId, instagramId, email, etc.)
+      const [contactRecord] = await this.tenantDb
         .select({
           id: contacts.id,
-          externalId: contacts.externalId,
+          whatsappId: contacts.whatsappId,
+          instagramId: contacts.instagramId,
+          facebookId: contacts.facebookId,
+          telegramId: contacts.telegramId,
+          email: contacts.email,
+          phone: contacts.phone,
           name: contacts.name,
         })
         .from(contacts)
         .where(eq(contacts.id, contactId))
         .limit(1);
 
-      if (!contact[0]) {
+      if (!contactRecord) {
         logger.error({ contactId }, "Contact not found for dispatch");
         throw new Error("CONTACT_NOT_FOUND");
       }
 
-      const externalId = contact[0].externalId;
+      // Determine external ID based on channel
+      let externalId = "";
+      switch (channel) {
+        case "whatsapp":
+        case "whatsapp_qr":
+          externalId = contactRecord.whatsappId || contactRecord.phone || "";
+          break;
+        case "instagram":
+          externalId = contactRecord.instagramId || "";
+          break;
+        case "facebook":
+          externalId = contactRecord.facebookId || "";
+          break;
+        case "telegram":
+          externalId = contactRecord.telegramId || "";
+          break;
+        case "email":
+        case "webchat":
+          externalId = contactRecord.email || "";
+          break;
+        default:
+          externalId = contactRecord.whatsappId || contactRecord.email || contactRecord.phone || "";
+      }
+
+      if (!externalId) {
+        logger.error({ contactId, channel }, "Contact missing external identifier for channel");
+        throw new Error("CONTACT_MISSING_IDENTIFIER");
+      }
 
       // Special case: WebChat uses Socket.IO, not external API
       if (channel === "webchat") {
@@ -60,7 +92,7 @@ export class ChannelDispatcherService {
       }
 
       // Get channel credentials
-      const cred = await this.tenantDb
+      const [credRecord] = await this.tenantDb
         .select({
           id: channelCredentials.id,
           encryptedCredentials: channelCredentials.encryptedCredentials,
@@ -74,7 +106,7 @@ export class ChannelDispatcherService {
         )
         .limit(1);
 
-      if (!cred[0]) {
+      if (!credRecord) {
         logger.error(
           { channel, contactId },
           `No active credentials found for channel ${channel}`
@@ -85,7 +117,7 @@ export class ChannelDispatcherService {
       // Decrypt credentials
       let credentials: ChannelCredentialsPayload;
       try {
-        credentials = JSON.parse(decryptCredentials(cred[0].encryptedCredentials));
+        credentials = JSON.parse(decryptCredentials(credRecord.encryptedCredentials));
       } catch (err) {
         logger.error({ err, channel }, "Failed to decrypt channel credentials");
         throw new Error("CREDENTIALS_DECRYPTION_FAILED");
@@ -167,7 +199,7 @@ export class ChannelDispatcherService {
     }
 
     const igService = new InstagramService(new InboxService(this.tenantDb));
-    await igService.sendInstagramMessage(externalId, content, pageAccessToken);
+    await igService.sendInstagramDirectMessage(externalId, content, pageAccessToken);
   }
 
   private async dispatchFacebook(
@@ -184,7 +216,7 @@ export class ChannelDispatcherService {
     }
 
     const fbService = new FacebookMessengerService(new InboxService(this.tenantDb));
-    await fbService.sendMessengerMessage(externalId, content, pageAccessToken);
+    await fbService.sendMessengerTextMessage(externalId, content, pageAccessToken);
   }
 
   private async dispatchWhatsAppQR(

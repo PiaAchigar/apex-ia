@@ -8,14 +8,18 @@ export class CalendarService {
 
   async createCalendarEvent(input: NewCalendarEvent): Promise<CalendarEvent> {
     try {
-      const result = await this.tenantDb
+      const [result] = await this.tenantDb
         .insert(calendarEvents)
         .values(input)
         .returning();
 
-      return result[0];
+      if (!result) {
+        throw new Error("CALENDAR_EVENT_NOT_CREATED");
+      }
+
+      return result;
     } catch (error) {
-      logger.error("Error creating calendar event", { error });
+      logger.error({ error }, "Error creating calendar event");
       throw error;
     }
   }
@@ -25,19 +29,19 @@ export class CalendarService {
     input: Partial<NewCalendarEvent>
   ): Promise<CalendarEvent> {
     try {
-      const result = await this.tenantDb
+      const [result] = await this.tenantDb
         .update(calendarEvents)
         .set(input)
         .where(eq(calendarEvents.id, id))
         .returning();
 
-      if (!result.length) {
+      if (!result) {
         throw new Error("CALENDAR_EVENT_NOT_FOUND");
       }
 
-      return result[0];
+      return result;
     } catch (error) {
-      logger.error("Error updating calendar event", { error, id });
+      logger.error({ error, id }, "Error updating calendar event");
       throw error;
     }
   }
@@ -53,7 +57,7 @@ export class CalendarService {
         throw new Error("CALENDAR_EVENT_NOT_FOUND");
       }
     } catch (error) {
-      logger.error("Error deleting calendar event", { error, id });
+      logger.error({ error, id }, "Error deleting calendar event");
       throw error;
     }
   }
@@ -68,7 +72,7 @@ export class CalendarService {
 
       return result[0] || null;
     } catch (error) {
-      logger.error("Error getting calendar event", { error, id });
+      logger.error({ error, id }, "Error getting calendar event");
       throw error;
     }
   }
@@ -92,7 +96,7 @@ export class CalendarService {
 
       return result;
     } catch (error) {
-      logger.error("Error getting calendar events for range", { error, agentId, startDate, endDate });
+      logger.error({ error, agentId, startDate, endDate }, "Error getting calendar events for range");
       throw error;
     }
   }
@@ -175,7 +179,7 @@ export class CalendarService {
 
       return { synced };
     } catch (error) {
-      logger.error("Error syncing with Google Calendar", { error, agentId });
+      logger.error({ error, agentId }, "Error syncing with Google Calendar");
       return {
         synced: 0,
         error: error instanceof Error ? error.message : "Unknown error",

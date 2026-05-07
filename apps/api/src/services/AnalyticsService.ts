@@ -252,10 +252,20 @@ export class AnalyticsService {
         .groupBy(conversations.channel, messages.createdAt);
 
       // Transform into heatmap format (group by date + hour + channel)
-      const result = heatmapData.map((row) => {
-        const date = row.createdAt ? new Date(row.createdAt) : new Date();
+      const result: Array<{
+        date: string;
+        hour: number;
+        channel: string;
+        messageCount: number;
+      }> = heatmapData.map((row) => {
+        const dateObj = row.createdAt ?? new Date();
+        const date = dateObj instanceof Date ? dateObj : new Date(dateObj);
+        const isoString = date.toISOString();
+        const parts = isoString.split("T");
+        const fallbackDateStr = new Date().toISOString().split("T")[0] as string;
+        const dateStr: string = (parts[0] ?? fallbackDateStr) as string;
         return {
-          date: date.toISOString().split("T")[0],
+          date: dateStr,
           hour: date.getUTCHours(),
           channel: row.channel,
           messageCount: row.count,
@@ -390,7 +400,13 @@ export class AnalyticsService {
           conditions.length > 0 ? and(orgIdCondition, ...conditions) : orgIdCondition
         );
 
-      const summaryData = summaryRows[0] || {};
+      const summaryData = summaryRows[0] || {
+        totalRequests: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        totalTokens: 0,
+        estimatedCostUsd: 0,
+      };
 
       // Count requests with errors (statusCode >= 400)
       const errorRows = await this.tenantDb
@@ -455,31 +471,46 @@ export class AnalyticsService {
       return {
         summary: {
           totalRequests,
-          totalInputTokens: summaryData.totalInputTokens || 0,
-          totalOutputTokens: summaryData.totalOutputTokens || 0,
-          totalTokens: summaryData.totalTokens || 0,
-          estimatedCostUsd: summaryData.estimatedCostUsd || 0,
+          totalInputTokens: summaryData.totalInputTokens ?? 0,
+          totalOutputTokens: summaryData.totalOutputTokens ?? 0,
+          totalTokens: summaryData.totalTokens ?? 0,
+          estimatedCostUsd: summaryData.estimatedCostUsd ?? 0,
           errorRate: Math.round(errorRate * 100) / 100,
         },
         byProvider: byProviderRows.map((row) => ({
           provider: row.provider,
-          requests: row.requests || 0,
-          totalTokens: row.totalTokens || 0,
-          estimatedCostUsd: row.estimatedCostUsd || 0,
+          requests: row.requests ?? 0,
+          totalTokens: row.totalTokens ?? 0,
+          estimatedCostUsd: row.estimatedCostUsd ?? 0,
         })),
         byModel: byModelRows.map((row) => ({
           model: row.model,
           provider: row.provider,
-          requests: row.requests || 0,
-          totalTokens: row.totalTokens || 0,
+          requests: row.requests ?? 0,
+          totalTokens: row.totalTokens ?? 0,
         })),
-        dailyTimeline: dailyRows.map((row) => ({
-          date: row.date
-            ? new Date(row.date).toISOString().split("T")[0]
-            : "",
-          requests: row.requests || 0,
-          totalTokens: row.totalTokens || 0,
-        })),
+        dailyTimeline: dailyRows.map((row): { date: string; requests: number; totalTokens: number } => {
+          const fallbackDate: string = new Date().toISOString().split("T")[0] as string;
+          let dateStr: string = fallbackDate;
+          if (row.date) {
+            const dateVal = row.date as string | Date | null | undefined;
+            if (typeof dateVal === 'string') {
+              const parts = dateVal.split("T");
+              dateStr = (parts[0] || fallbackDate) as string;
+            } else if (dateVal instanceof Date) {
+              const parts = dateVal.toISOString().split("T");
+              dateStr = (parts[0] || fallbackDate) as string;
+            } else if (dateVal) {
+              const parts = new Date(dateVal).toISOString().split("T");
+              dateStr = (parts[0] || fallbackDate) as string;
+            }
+          }
+          return {
+            date: dateStr,
+            requests: row.requests ?? 0,
+            totalTokens: row.totalTokens ?? 0,
+          };
+        }),
       };
     } catch (error) {
       logger.error({ error, organizationId }, "Error fetching AI usage summary");

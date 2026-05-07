@@ -205,7 +205,9 @@ export class AutomationService {
       throw new Error("FILE_DOWNLOAD_FAILED");
     }
 
-    return new TextDecoder().decode(data);
+    // data is a Blob; convert to string
+    const buffer = await data.arrayBuffer();
+    return new TextDecoder().decode(buffer);
   }
 
   private escapePythonCode(code: string): string {

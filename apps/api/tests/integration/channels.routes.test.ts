@@ -4,9 +4,12 @@ import { createChannelsRoutes } from "../../src/routes/channels.routes.js";
 
 // Mock context and database
 const mockContext = {
-  organizationId: "org-test-123",
   userId: "user-test-456",
+  organizationId: "org-test-123",
+  organizationSlug: "test-org",
   orgSlug: "test-org",
+  roleName: "admin",
+  permissions: {},
 };
 
 const mocks = vi.hoisted(() => {
@@ -87,7 +90,9 @@ vi.mock("../../src/utils/encryption.js", () => ({
 
 function buildApp() {
   const app = new Hono();
-  app.route("/settings/channels", createChannelsRoutes());
+  // Mock SocketIO instance for createChannelsRoutes
+  const mockIo = {} as any;
+  app.route("/settings/channels", createChannelsRoutes(mockIo));
   return app;
 }
 
@@ -136,8 +141,10 @@ describe("GET /settings/channels", () => {
     };
     expect(body.success).toBe(true);
     expect(body.data).toHaveLength(2);
-    expect(body.data[0].channelType).toBe("whatsapp-cloud");
-    expect(body.data[1].channelType).toBe("telegram");
+    if (body.data && body.data.length >= 2) {
+      expect(body.data[0]?.channelType).toBe("whatsapp-cloud");
+      expect(body.data[1]?.channelType).toBe("telegram");
+    }
   });
 
   it("should return 200 with empty array when no channels are connected", async () => {

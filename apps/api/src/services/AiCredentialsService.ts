@@ -7,7 +7,7 @@ import { logger } from "../utils/logger.js";
 export interface AiCredentialInput {
   provider: "anthropic" | "openai" | "gemini" | "openrouter";
   apiKey: string;
-  isPrimary?: boolean;
+  isPrimary?: boolean | undefined;
 }
 
 export interface AiCredentialResponse {
@@ -31,8 +31,8 @@ export class AiCredentialsService {
       return rows.map((row) => ({
         id: row.id,
         provider: row.provider,
-        isPrimary: row.isPrimary,
-        isActive: row.isActive,
+        isPrimary: row.isPrimary ?? false,
+        isActive: row.isActive ?? true,
         createdAt: row.createdAt?.toISOString() || new Date().toISOString(),
       }));
     } catch (error) {
@@ -67,8 +67,8 @@ export class AiCredentialsService {
       return {
         id: created.id,
         provider: created.provider,
-        isPrimary: created.isPrimary,
-        isActive: created.isActive,
+        isPrimary: created.isPrimary ?? false,
+        isActive: created.isActive ?? true,
         createdAt: created.createdAt?.toISOString() || new Date().toISOString(),
       };
     } catch (error) {
@@ -105,8 +105,8 @@ export class AiCredentialsService {
       return {
         id: updated.id,
         provider: updated.provider,
-        isPrimary: updated.isPrimary,
-        isActive: updated.isActive,
+        isPrimary: updated.isPrimary ?? false,
+        isActive: updated.isActive ?? true,
         createdAt: updated.createdAt?.toISOString() || new Date().toISOString(),
       };
     } catch (error) {
@@ -140,8 +140,8 @@ export class AiCredentialsService {
       return {
         id: updated.id,
         provider: updated.provider,
-        isPrimary: updated.isPrimary,
-        isActive: updated.isActive,
+        isPrimary: updated.isPrimary ?? false,
+        isActive: updated.isActive ?? true,
         createdAt: updated.createdAt?.toISOString() || new Date().toISOString(),
       };
     } catch (error) {

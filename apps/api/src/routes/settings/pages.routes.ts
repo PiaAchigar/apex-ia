@@ -33,7 +33,7 @@ export function createPagesRoutes() {
   router.get("/", async (c) => {
     const auth = c.get("auth");
     const { organizationId } = auth;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new PagesService(tenantDb);
@@ -57,7 +57,7 @@ export function createPagesRoutes() {
     const auth = c.get("auth");
     const { organizationId } = auth;
     const body = c.req.valid("json") as CreatePageInput;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new PagesService(tenantDb);
@@ -82,7 +82,7 @@ export function createPagesRoutes() {
     const { organizationId } = auth;
     const pageId = c.req.param("id");
     const body = c.req.valid("json") as UpdatePageInput;
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new PagesService(tenantDb);
@@ -106,7 +106,7 @@ export function createPagesRoutes() {
     const auth = c.get("auth");
     const { organizationId } = auth;
     const pageId = c.req.param("id");
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new PagesService(tenantDb);
@@ -136,7 +136,7 @@ export function createPublicPagesRoutes() {
   router.get("/:organizationId/:slug", async (c) => {
     const organizationId = c.req.param("organizationId");
     const slug = c.req.param("slug");
-    const tenantDb = databaseProvider.getClientDrizzle(organizationId);
+    const tenantDb = await databaseProvider.getClientDrizzle(organizationId);
 
     try {
       const service = new PagesService(tenantDb);

@@ -33,15 +33,12 @@ export async function validateClientDatabaseUrl(
   let client: postgres.Sql | null = null;
   try {
     const isPooler = parsedUrl.hostname?.includes('pooler');
-    const clientOptions: any = {
+    const clientOptions: postgres.Options<{}> = {
       max: 1,
       connect_timeout: 10,
       idle_timeout: 5,
+      ...(isPooler ? { ssl: 'require' as const } : {}),
     };
-
-    if (isPooler) {
-      clientOptions.ssl = 'require';
-    }
 
     client = postgres(databaseUrl, clientOptions);
 

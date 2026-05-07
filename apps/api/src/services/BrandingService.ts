@@ -11,10 +11,10 @@ export interface BrandingConfig {
 }
 
 export interface UpdateBrandingInput {
-  logoUrl?: string | null;
-  primaryColor?: string;
-  accentColor?: string;
-  faviconUrl?: string | null;
+  logoUrl?: string | null | undefined;
+  primaryColor?: string | undefined;
+  accentColor?: string | undefined;
+  faviconUrl?: string | null | undefined;
 }
 
 const BRANDING_DEFAULTS = {
@@ -59,7 +59,12 @@ export class BrandingService {
     input: UpdateBrandingInput
   ): Promise<void> {
     try {
-      const updateData: Record<string, any> = {};
+      const updateData: Partial<{
+        logoUrl: string | null;
+        primaryColor: string;
+        accentColor: string;
+        faviconUrl: string | null;
+      }> = {};
 
       if (input.logoUrl !== undefined) {
         updateData.logoUrl = input.logoUrl;

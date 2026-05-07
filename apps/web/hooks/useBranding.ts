@@ -8,6 +8,7 @@ export interface BrandingConfig {
   primaryColor: string;
   accentColor: string;
   faviconUrl: string | null;
+  appName?: string;
 }
 
 export interface UpdateBrandingInput {
@@ -15,6 +16,7 @@ export interface UpdateBrandingInput {
   primaryColor?: string;
   accentColor?: string;
   faviconUrl?: string | null;
+  appName?: string;
 }
 
 const QUERY_KEY = ["branding"];
@@ -24,6 +26,7 @@ const DEFAULT_BRANDING: BrandingConfig = {
   primaryColor: "#10B981",
   accentColor: "#10B981",
   faviconUrl: null,
+  appName: "Apex IA",
 };
 
 export function useBranding() {

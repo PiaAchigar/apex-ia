@@ -15,7 +15,13 @@ vi.mock("../../src/services/ConversationService.js", () => ({
 
 vi.mock("../../src/middleware/authMiddleware.js", () => ({
   authMiddleware: vi.fn(async (c: { set: (k: string, v: unknown) => void }, next: () => Promise<void>) => {
-    c.set("auth", { userId: "agent-1", organizationId: "org-1", organizationSlug: "acme" });
+    c.set("auth", {
+      userId: "agent-1",
+      organizationId: "org-1",
+      organizationSlug: "acme",
+      roleName: "standard",
+      permissions: {},
+    });
     await next();
   }),
 }));

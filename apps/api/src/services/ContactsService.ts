@@ -5,16 +5,16 @@ import type { UpdateContactInput } from "@apex-ia/types";
 import { logger } from "../utils/logger.js";
 
 type CreateContactInput = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  tags?: string[];
-  customFieldsJson?: Record<string, unknown>;
+  name?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  tags?: string[] | undefined;
+  customFieldsJson?: Record<string, unknown> | undefined;
 };
 
 type CsvExportFilters = {
-  isArchived?: boolean;
-  tags?: string[];
+  isArchived?: boolean | undefined;
+  tags?: string[] | undefined;
 };
 
 type ImportResult = {

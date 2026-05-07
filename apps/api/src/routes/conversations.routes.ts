@@ -48,6 +48,14 @@ export function createConversationRoutes(io: SocketIOInstance) {
       const tenantDb = c.get("tenantDb");
       const orgSlug = c.get("orgSlug");
 
+      // Only authenticated users can send messages
+      if (!auth.userId) {
+        return c.json(
+          { success: false, error: "API keys cannot send messages" },
+          401
+        );
+      }
+
       const conversationService = new ConversationService(tenantDb);
       const result = await conversationService.sendOutgoingMessageToChannel(
         conversationId,
@@ -82,6 +90,14 @@ export function createConversationRoutes(io: SocketIOInstance) {
       const { conversationId } = c.req.param();
       const auth = c.get("auth");
       const tenantDb = c.get("tenantDb");
+
+      // Only authenticated users can mark messages as read
+      if (!auth.userId) {
+        return c.json(
+          { success: false, error: "API keys cannot mark messages as read" },
+          401
+        );
+      }
 
       const conversationService = new ConversationService(tenantDb);
       await conversationService.markMessagesAsRead(conversationId, auth.userId);

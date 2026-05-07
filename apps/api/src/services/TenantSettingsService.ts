@@ -33,7 +33,7 @@ export class TenantSettingsService {
 
   async saveCustomCss(organizationId: string, css: string): Promise<void> {
     try {
-      const existing = await this.tenantDb
+      const [existingRecord] = await this.tenantDb
         .select({ id: tenantSettings.id })
         .from(tenantSettings)
         .where(
@@ -44,7 +44,7 @@ export class TenantSettingsService {
         )
         .limit(1);
 
-      if (existing.length > 0) {
+      if (existingRecord) {
         // Update
         await this.tenantDb
           .update(tenantSettings)
@@ -52,7 +52,7 @@ export class TenantSettingsService {
             value: css,
             updatedAt: new Date(),
           })
-          .where(eq(tenantSettings.id, existing[0].id));
+          .where(eq(tenantSettings.id, existingRecord.id));
       } else {
         // Insert
         await this.tenantDb.insert(tenantSettings).values({
@@ -72,7 +72,7 @@ export class TenantSettingsService {
 
   async saveCustomJs(organizationId: string, js: string): Promise<void> {
     try {
-      const existing = await this.tenantDb
+      const [existingRecord] = await this.tenantDb
         .select({ id: tenantSettings.id })
         .from(tenantSettings)
         .where(
@@ -83,7 +83,7 @@ export class TenantSettingsService {
         )
         .limit(1);
 
-      if (existing.length > 0) {
+      if (existingRecord) {
         // Update
         await this.tenantDb
           .update(tenantSettings)
@@ -91,7 +91,7 @@ export class TenantSettingsService {
             value: js,
             updatedAt: new Date(),
           })
-          .where(eq(tenantSettings.id, existing[0].id));
+          .where(eq(tenantSettings.id, existingRecord.id));
       } else {
         // Insert
         await this.tenantDb.insert(tenantSettings).values({

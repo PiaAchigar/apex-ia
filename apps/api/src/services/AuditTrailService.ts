@@ -4,14 +4,14 @@ import { auditLogs } from "@apex-ia/database/schema/public";
 import { logger } from "../utils/logger.js";
 
 export interface LogActionParams {
-  userId?: string | null;
+  userId?: string | null | undefined;
   organizationId: string;
   action: string;
-  resourceType?: string;
-  resourceId?: string;
-  oldValues?: object;
-  newValues?: object;
-  ipAddress?: string;
+  resourceType?: string | undefined;
+  resourceId?: string | undefined;
+  oldValues?: object | undefined;
+  newValues?: object | undefined;
+  ipAddress?: string | undefined;
 }
 
 export class AuditTrailService {
@@ -41,7 +41,7 @@ export class AuditTrailService {
 
   async listAuditLogs(
     organizationId: string,
-    filters?: { limit?: number; offset?: number }
+    filters?: { limit?: number | undefined; offset?: number | undefined } | undefined
   ): Promise<Array<typeof auditLogs.$inferSelect>> {
     try {
       const limit = Math.min(filters?.limit || 50, 200);

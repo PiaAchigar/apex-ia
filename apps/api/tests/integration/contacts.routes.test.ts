@@ -26,6 +26,8 @@ vi.mock("../../src/middleware/authMiddleware.js", () => ({
         userId: "user-test",
         organizationId: "org-1",
         organizationSlug: "test-org",
+        roleName: "standard",
+        permissions: {},
       });
       await next();
     }

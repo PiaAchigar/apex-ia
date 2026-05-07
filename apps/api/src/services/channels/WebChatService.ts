@@ -5,7 +5,7 @@ import { logger } from "../../utils/logger.js";
 type WebChatSession = {
   sessionId: string;
   createdAt: Date;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | undefined;
 };
 
 export class WebChatService {
@@ -25,7 +25,7 @@ export class WebChatService {
 
   async handleIncomingWebChatMessage(
     sessionId: string,
-    message: { content: string; mediaUrl?: string }
+    message: { content: string; mediaUrl?: string | undefined }
   ): Promise<void> {
     if (!this.activeSessions.has(sessionId)) {
       this.createSession(sessionId);
@@ -38,6 +38,7 @@ export class WebChatService {
         senderExternalId: sessionId,
         content: message.content,
         mediaUrl: message.mediaUrl,
+        mediaType: undefined,
         rawPayload: { sessionId, timestamp: new Date().toISOString() },
       });
     } catch (err) {

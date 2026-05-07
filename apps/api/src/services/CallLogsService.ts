@@ -25,36 +25,40 @@ export class CallLogsService {
 
       return { data, total };
     } catch (error) {
-      logger.error("Error listing call logs", { error });
+      logger.error({ error }, "Error listing call logs");
       throw error;
     }
   }
 
   async createCallLog(input: NewCallLog): Promise<CallLog> {
     try {
-      const result = await this.tenantDb
+      const [result] = await this.tenantDb
         .insert(callLogs)
         .values(input)
         .returning();
 
-      return result[0];
+      if (!result) {
+        throw new Error("CALL_LOG_NOT_CREATED");
+      }
+
+      return result;
     } catch (error) {
-      logger.error("Error creating call log", { error });
+      logger.error({ error }, "Error creating call log");
       throw error;
     }
   }
 
   async getCallLogById(id: string): Promise<CallLog | null> {
     try {
-      const result = await this.tenantDb
+      const [result] = await this.tenantDb
         .select()
         .from(callLogs)
         .where(eq(callLogs.id, id))
         .limit(1);
 
-      return result[0] || null;
+      return result || null;
     } catch (error) {
-      logger.error("Error getting call log", { error, id });
+      logger.error({ error, id }, "Error getting call log");
       throw error;
     }
   }

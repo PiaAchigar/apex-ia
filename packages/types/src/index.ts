@@ -28,40 +28,40 @@ export type AiProvider = "anthropic" | "openai" | "gemini" | "openrouter";
 export type CreateConversationInput = {
   contactId: string;
   channel: ChannelType;
-  assignedAgentId?: string;
+  assignedAgentId?: string | undefined;
 };
 
 export type UpdateContactInput = {
-  name?: string;
-  email?: string;
-  phone?: string;
-  tags?: string[];
-  customFieldsJson?: Record<string, unknown>;
+  name?: string | undefined;
+  email?: string | undefined;
+  phone?: string | undefined;
+  tags?: string[] | undefined;
+  customFieldsJson?: Record<string, unknown> | undefined;
 };
 
 export type InboxFiltersType = {
   tab: "all" | "unassigned" | "mine" | "assigned";
-  channel?: ChannelType;
-  status?: ConversationStatus;
-  search?: string;
-  page?: number;
-  limit?: number;
+  channel?: ChannelType | undefined;
+  status?: ConversationStatus | undefined;
+  search?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 };
 
 export type OutgoingMessage = {
   conversationId: string;
   content: string;
-  mediaUrl?: string;
-  mediaType?: "image" | "audio" | "video" | "document";
+  mediaUrl?: string | undefined;
+  mediaType?: "image" | "audio" | "video" | "document" | undefined;
 };
 
 export type IncomingMessagePayload = {
   channel: ChannelType;
   externalId: string;
   senderExternalId: string;
-  content?: string;
-  mediaUrl?: string;
-  mediaType?: "image" | "audio" | "video" | "document";
+  content?: string | undefined;
+  mediaUrl?: string | undefined;
+  mediaType?: "image" | "audio" | "video" | "document" | undefined;
   rawPayload: Record<string, unknown>;
 };
 
@@ -69,11 +69,11 @@ export type AiProviderConfig = {
   provider: AiProvider;
   model: string;
   apiKey: string;
-  fallbackProvider?: AiProvider;
-  fallbackModel?: string;
-  fallbackApiKey?: string;
-  maxTokens?: number;
-  temperature?: number;
+  fallbackProvider?: AiProvider | undefined;
+  fallbackModel?: string | undefined;
+  fallbackApiKey?: string | undefined;
+  maxTokens?: number | undefined;
+  temperature?: number | undefined;
 };
 
 // ---- Response types ----
@@ -88,7 +88,7 @@ export type ApiErrorResponse = {
   error: {
     code: string;
     message: string;
-    details?: unknown;
+    details?: unknown | undefined;
   };
 };
 

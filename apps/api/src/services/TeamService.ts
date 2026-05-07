@@ -34,7 +34,10 @@ export class TeamService {
         .leftJoin(roles, eq(users.roleId, roles.id))
         .where(eq(users.organizationId, organizationId));
 
-      return members;
+      return members.map(m => ({
+        ...m,
+        createdAt: m.createdAt ?? new Date(),
+      })) as TeamMember[];
     } catch (error) {
       logger.error(
         { error, organizationId },
@@ -139,7 +142,14 @@ export class TeamService {
         "Team member role updated"
       );
 
-      return member[0];
+      const result = member[0];
+      if (!result) {
+        throw new Error("USER_NOT_FOUND: Usuario no encontrado");
+      }
+      return {
+        ...result,
+        createdAt: result.createdAt ?? new Date(),
+      } as TeamMember;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error(
@@ -163,11 +173,11 @@ export class TeamService {
         .where(and(eq(users.id, userId), eq(users.organizationId, organizationId)))
         .limit(1);
 
-      if (userRecord.length === 0 || !userRecord[0].roleId) {
+      if (userRecord.length === 0 || !userRecord[0]?.roleId) {
         throw new Error("USER_NOT_FOUND: Usuario no encontrado");
       }
 
-      const roleId = userRecord[0].roleId;
+      const roleId = userRecord[0]?.roleId ?? "";
 
       // Check if role is system role (cannot be modified)
       const roleRecord = await db
@@ -176,7 +186,7 @@ export class TeamService {
         .where(eq(roles.id, roleId))
         .limit(1);
 
-      if (roleRecord.length > 0 && roleRecord[0].isSystem) {
+      if (roleRecord.length > 0 && roleRecord[0]?.isSystem) {
         throw new Error("CANNOT_MODIFY_SYSTEM_ROLE: No se pueden modificar permisos de roles del sistema");
       }
 

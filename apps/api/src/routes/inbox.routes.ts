@@ -33,10 +33,21 @@ export function createInboxRoutes(io: SocketIOInstance) {
       const tenantDb = c.get("tenantDb");
       const organizationId = c.get("organizationId");
 
+      // Only authenticated users can view personal inbox
+      if (!auth.userId) {
+        return c.json(
+          { success: false, error: "API keys cannot access personal inbox" },
+          401
+        );
+      }
+
       const inboxService = new InboxService(tenantDb, organizationId);
       const conversations = await inboxService.getConversationsForAgent(
         auth.userId,
-        filters
+        {
+          ...filters,
+          channel: filters.channel as any, // Channel from query string is typed as string, but service expects ChannelType
+        }
       );
 
       return c.json({ success: true, data: conversations });

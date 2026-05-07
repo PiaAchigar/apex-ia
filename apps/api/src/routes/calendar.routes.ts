@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
 import { CalendarService } from "../services/CalendarService.js";
+import type { NewCalendarEvent } from "@apex-ia/database/schema/tenant";
 import { logger } from "../utils/logger.js";
 
 const createCalendarEventSchema = z.object({
@@ -15,7 +16,11 @@ const createCalendarEventSchema = z.object({
   location: z.string().optional(),
 });
 
-const updateCalendarEventSchema = createCalendarEventSchema.partial();
+const updateCalendarEventSchema = createCalendarEventSchema.partial().extend({
+  title: z.string().min(1, "Title is required").optional(),
+  startAt: z.string().datetime().optional(),
+  endAt: z.string().datetime().optional(),
+});
 
 const syncGoogleSchema = z.object({
   oauthToken: z.string().min(1, "OAuth token is required"),
@@ -97,11 +102,19 @@ export function createCalendarRoutes() {
         const input = c.req.valid("json");
 
         const service = new CalendarService(tenantDb);
-        const updated = await service.updateCalendarEvent(id, {
-          ...input,
-          startAt: input.startAt ? new Date(input.startAt) : undefined,
-          endAt: input.endAt ? new Date(input.endAt) : undefined,
-        });
+
+        // Build update object, only including defined fields
+        const updateData: Record<string, unknown> = {};
+        if (input.title !== undefined) updateData.title = input.title;
+        if (input.startAt !== undefined) updateData.startAt = new Date(input.startAt);
+        if (input.endAt !== undefined) updateData.endAt = new Date(input.endAt);
+        if (input.description !== undefined) updateData.description = input.description;
+        if (input.contactId !== undefined) updateData.contactId = input.contactId;
+        if (input.allDay !== undefined) updateData.allDay = input.allDay;
+        if (input.agentId !== undefined) updateData.agentId = input.agentId;
+        if (input.location !== undefined) updateData.location = input.location;
+
+        const updated = await service.updateCalendarEvent(id, updateData as Partial<NewCalendarEvent>);
 
         return c.json({ success: true, data: updated }, 200);
       } catch (error) {
@@ -148,6 +161,14 @@ export function createCalendarRoutes() {
         const tenantDb = c.get("tenantDb");
         const auth = c.get("auth");
         const { oauthToken } = c.req.valid("json");
+
+        // API keys cannot sync Google Calendar
+        if (!auth.userId) {
+          return c.json(
+            { success: false, error: "API keys cannot sync Google Calendar" },
+            401
+          );
+        }
 
         const service = new CalendarService(tenantDb);
         const result = await service.syncWithGoogleCalendar(auth.userId, oauthToken);

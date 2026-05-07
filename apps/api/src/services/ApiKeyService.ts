@@ -33,7 +33,11 @@ export class ApiKeyService {
         .from(apiKeys)
         .where(eq(apiKeys.organizationId, organizationId));
 
-      return keys;
+      return keys.map((key) => ({
+        ...key,
+        createdAt: key.createdAt ?? new Date(),
+        isActive: key.isActive ?? true,
+      }));
     } catch (error) {
       logger.error({ error, organizationId }, "Failed to list API keys");
       throw new Error("API_KEY_LIST_FAILED: No se pudieron obtener las API keys");
@@ -73,6 +77,17 @@ export class ApiKeyService {
           createdAt: apiKeys.createdAt,
         });
 
+      if (!record) {
+        throw new Error("FAILED_TO_CREATE_API_KEY: No se pudo crear la API key");
+      }
+
+      // Ensure isActive is non-null (default is true if not set)
+      const normalizedRecord: ApiKeyPublic = {
+        ...record,
+        createdAt: record.createdAt ?? new Date(),
+        isActive: record.isActive ?? true,
+      };
+
       logger.info(
         { organizationId, name, keyId: record.id },
         "API key generated"
@@ -80,7 +95,7 @@ export class ApiKeyService {
 
       return {
         key: rawKey, // Only returned once, never stored in plaintext
-        record,
+        record: normalizedRecord,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -125,7 +140,7 @@ export class ApiKeyService {
       const providedHash = createHash("sha256").update(rawKey).digest("hex");
 
       // Lookup by hash
-      const key = await db
+      const [keyRecord] = await db
         .select({
           id: apiKeys.id,
           organizationId: apiKeys.organizationId,
@@ -135,7 +150,7 @@ export class ApiKeyService {
         .where(eq(apiKeys.keyHash, providedHash))
         .limit(1);
 
-      if (key.length === 0 || !key[0].isActive) {
+      if (!keyRecord || !keyRecord.isActive) {
         return null;
       }
 
@@ -144,16 +159,16 @@ export class ApiKeyService {
         await db
           .update(apiKeys)
           .set({ lastUsedAt: new Date() })
-          .where(eq(apiKeys.id, key[0].id));
+          .where(eq(apiKeys.id, keyRecord.id));
       } catch (updateError) {
         // Log but don't fail if update fails
         logger.warn(
-          { error: updateError, keyId: key[0].id },
+          { error: updateError, keyId: keyRecord.id },
           "Failed to update lastUsedAt"
         );
       }
 
-      return { organizationId: key[0].organizationId };
+      return { organizationId: keyRecord.organizationId };
     } catch (error) {
       logger.error({ error }, "Failed to validate API key");
       throw new Error("API_KEY_VALIDATE_FAILED: Error validando API key");

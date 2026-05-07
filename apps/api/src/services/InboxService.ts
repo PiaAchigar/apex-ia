@@ -245,7 +245,7 @@ export class InboxService {
       instagram: "instagramId",
       facebook: "facebookId",
       telegram: "telegramId",
-      webchat: "sessionId",
+      webchat: "email",
     };
     return fieldMap[channel] ?? "phone";
   }

@@ -11,9 +11,9 @@ type CreateCampaignInput = {
 };
 
 type UpdateCampaignInput = Partial<{
-  name: string;
-  channel: string;
-  messageContent: string;
+  name?: string | undefined;
+  channel?: string | undefined;
+  messageContent?: string | undefined;
 }>;
 
 type CampaignStatus = "draft" | "scheduled" | "running" | "paused" | "completed" | "cancelled";
@@ -162,7 +162,7 @@ export class CampaignService {
 
     return {
       campaignId: id,
-      status: campaign.status,
+      status: campaign.status ?? "draft",
       targetCount: total,
       sentCount: sent,
       failedCount: failed,

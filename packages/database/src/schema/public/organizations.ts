@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, boolean } from "drizzle-orm/pg-core";
 
 export const organizations = pgTable("organizations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -7,10 +7,13 @@ export const organizations = pgTable("organizations", {
   plan: text("plan").default("starter"),
   paidAt: timestamp("paid_at"),
   setupCompletedAt: timestamp("setup_completed_at"),
+  trialEndsAt: timestamp("trial_ends_at"),
   logoUrl: varchar("logo_url", { length: 500 }),
   primaryColor: varchar("primary_color", { length: 7 }).default("#10B981"),
   accentColor: varchar("accent_color", { length: 7 }).default("#10B981"),
   faviconUrl: varchar("favicon_url", { length: 500 }),
+  customDomain: varchar("custom_domain", { length: 255 }).unique(),
+  whitelabelEnabled: boolean("whitelabel_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

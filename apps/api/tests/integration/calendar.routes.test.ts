@@ -16,7 +16,13 @@ vi.mock("../../src/services/CalendarService.js", () => ({
 
 vi.mock("../../src/middleware/authMiddleware.js", () => ({
   authMiddleware: vi.fn(async (c: { set: (k: string, v: unknown) => void }, next: () => Promise<void>) => {
-    c.set("auth", { userId: "agent-1", organizationId: "org-1" });
+    c.set("auth", {
+      userId: "agent-1",
+      organizationId: "org-1",
+      organizationSlug: "test-org",
+      roleName: "standard",
+      permissions: {},
+    });
     await next();
   }),
 }));
@@ -30,7 +36,7 @@ vi.mock("../../src/middleware/tenantMiddleware.js", () => ({
 
 function buildApp() {
   const app = new Hono();
-  app.route("/calendar", createCalendarRoutes({} as never));
+  app.route("/calendar", createCalendarRoutes() as never);
   return app;
 }
 

@@ -45,6 +45,14 @@ export function createTasksRoutes() {
     const tenantDb = c.get("tenantDb");
     const { status, priority, page, limit } = c.req.valid("query");
 
+    // Only authenticated users can view personal tasks
+    if (!auth.userId) {
+      return c.json(
+        { success: false, error: "API keys cannot access personal tasks" },
+        401
+      );
+    }
+
     const service = new TasksService(tenantDb);
     const taskList = await service.getTasksForAgent(auth.userId, {
       status,

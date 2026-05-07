@@ -18,26 +18,26 @@ export type CreateDealInput = {
   title: string;
   pipelineId: string;
   stageId: string;
-  contactId?: string;
-  amount?: string;
-  probability?: number;
-  assignedAgentId?: string;
+  contactId?: string | undefined;
+  amount?: string | undefined;
+  probability?: number | undefined;
+  assignedAgentId?: string | undefined;
 };
 
 export type UpdateDealInput = Partial<{
-  title: string;
-  stageId: string;
-  amount: string;
-  probability: number;
-  assignedAgentId: string;
-  closedDate: Date;
+  title?: string | undefined;
+  stageId?: string | undefined;
+  amount?: string | undefined;
+  probability?: number | undefined;
+  assignedAgentId?: string | undefined;
+  closedDate?: Date | undefined;
 }>;
 
 export type StageInput = {
-  id?: string;
+  id?: string | undefined;
   name: string;
   order: number;
-  color?: string;
+  color?: string | undefined;
 };
 
 export class PipelineService {
