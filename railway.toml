@@ -1,0 +1,16 @@
+# Railway config — apps/api (Hono backend)
+# Place at monorepo root so build context = repo root.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile"
+
+[deploy]
+startCommand = "pnpm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# NOTE: persistent volume must be created in Railway UI (Settings → Volumes)
+# and mounted at /app/apps/api/.baileys-sessions for WhatsApp QR session persistence.
