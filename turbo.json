@@ -5,7 +5,23 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "API_URL",
+        "SUPABASE_URL",
+        "SUPABASE_ANON_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "REDIS_TOKEN",
+        "ENCRYPTION_KEY",
+        "CLIENT_DB_ENCRYPTION_KEY",
+        "JWT_SECRET",
+        "NODE_ENV",
+        "MP_ACCESS_TOKEN",
+        "MP_WEBHOOK_SECRET",
+        "MP_CURRENCY"
+      ]
     },
     "dev": {
       "cache": false,

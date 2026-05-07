@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
-import app from "../../src/index";
+import app from "../../src/index.js";
 
 describe("Automations Routes Integration", () => {
   const baseUrl = "/settings/automations";

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { AutomationService } from "../../src/services/AutomationService";
-import type { DrizzleDb } from "@apex-ia/database";
+import { AutomationService } from "../../src/services/AutomationService.js";
+import type { DrizzleDb } from "../../src/db/drizzle.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 describe("AutomationService", () => {
