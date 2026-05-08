@@ -95,7 +95,7 @@ const healthHandler = async (c: Context) => {
 };
 
 app.get("/health", healthHandler);
-//app.get("/api/health", healthHandler);
+app.get("/api/health", healthHandler);
 
 // Auth: no setup check needed
 app.route("/auth", authRoutes);
@@ -118,7 +118,7 @@ app.use("/analytics/*", checkSetupStatusMiddleware);
 app.use("/settings/*", checkSetupStatusMiddleware);
 app.use("/billing/*", checkSetupStatusMiddleware);
 
-const port = parseInt(process.env["PORT"] ?? "3001");
+const port = parseInt(process.env.PORT ?? "3001");
 
 const server = serve({ fetch: app.fetch, port }, () => {
   logger.info({ port }, `Apex IA API running on port ${port}`);
@@ -138,7 +138,7 @@ try {
   logger.error(err, "Failed to start plan downgrade cron");
 }
 
-if (process.env["REDIS_URL"]) {
+if (process.env.REDIS_URL) {
   try {
     startCampaignWorker();
     logger.info("Campaign BullMQ worker started");
