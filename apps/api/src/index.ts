@@ -83,7 +83,6 @@ app.get("/health", async (c) => {
     checks.redis = "ok";
   } catch (error) {
     checks.redis = "error";
-    isHealthy = false;
     logger.warn({ error }, "Redis health check failed");
   }
 
