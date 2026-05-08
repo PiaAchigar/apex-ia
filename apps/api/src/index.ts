@@ -2,7 +2,7 @@ import "dotenv/config";
 import { initSentry } from "./utils/sentry.js";
 initSentry();
 import { serve } from "@hono/node-server";
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { requestLoggerMiddleware } from "./middleware/requestLoggerMiddleware.js";
 import { errorHandlerMiddleware } from "./middleware/errorHandlerMiddleware.js";
 import { corsMiddleware } from "./middleware/corsMiddleware.js";
@@ -46,9 +46,9 @@ import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
 import { schedulePlanDowngradeCron } from "./jobs/plan-downgrade.job.js";
 import { startCampaignWorker } from "./queues/campaignWorker.js";
+import { getCampaignQueue } from "./queues/campaignQueue.js";
 import { logger } from "./utils/logger.js";
 import { db } from "./db/drizzle.js";
-import { Redis } from "@upstash/redis";
 
 const app = new Hono();
 
@@ -59,11 +59,10 @@ app.use("*", publicRateLimitMiddleware);
 
 app.onError(errorHandlerMiddleware);
 
-app.get("/health", async (c) => {
+const healthHandler = async (c: Context) => {
   const checks: Record<string, string> = {};
   let isHealthy = true;
 
-  // Check database
   try {
     await db.execute("SELECT 1");
     checks.database = "ok";
@@ -73,32 +72,31 @@ app.get("/health", async (c) => {
     logger.error({ error }, "Database health check failed");
   }
 
-  // Check Redis
   try {
-    const redis = new Redis({
-      url: process.env.REDIS_URL,
-      token: process.env.REDIS_TOKEN,
-    });
-    await redis.ping();
+    const queue = getCampaignQueue();
+    await queue.getJobCounts("waiting", "active", "failed");
     checks.redis = "ok";
+    checks.bullmq = "ok";
   } catch (error) {
     checks.redis = "error";
+    checks.bullmq = "error";
     isHealthy = false;
-    logger.warn({ error }, "Redis health check failed");
+    logger.warn({ error }, "Redis/BullMQ health check failed");
   }
-
-  const status = isHealthy ? "ok" : "degraded";
 
   return c.json(
     {
-      status,
+      status: isHealthy ? "ok" : "degraded",
       checks,
       timestamp: new Date().toISOString(),
       version: "1.0.0",
     },
     isHealthy ? 200 : 503
   );
-});
+};
+
+app.get("/health", healthHandler);
+//app.get("/api/health", healthHandler);
 
 // Auth: no setup check needed
 app.route("/auth", authRoutes);
