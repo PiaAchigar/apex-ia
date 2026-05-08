@@ -46,7 +46,6 @@ import { ChannelLookupService } from "./services/ChannelLookupService.js";
 import { scheduleSetupReminderCron } from "./jobs/setup-reminder.job.js";
 import { schedulePlanDowngradeCron } from "./jobs/plan-downgrade.job.js";
 import { startCampaignWorker } from "./queues/campaignWorker.js";
-import { getCampaignQueue } from "./queues/campaignQueue.js";
 import { logger } from "./utils/logger.js";
 import { db } from "./db/drizzle.js";
 
@@ -55,32 +54,28 @@ const app = new Hono();
 app.use(corsMiddleware);
 app.use("*", securityHeadersMiddleware);
 app.use("*", requestLoggerMiddleware);
-app.use("*", publicRateLimitMiddleware);
 
 app.onError(errorHandlerMiddleware);
 
+// Healthcheck: registered BEFORE the rate limiter and any auth/DB-heavy middleware
+// so platform probes (Railway, Docker HEALTHCHECK) can always reach it.
+// Database check uses a strict timeout so a stuck connection never holds the response.
 const healthHandler = async (c: Context) => {
   const checks: Record<string, string> = {};
   let isHealthy = true;
 
   try {
-    await db.execute("SELECT 1");
+    await Promise.race([
+      db.execute("SELECT 1"),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("database health check timed out")), 3000)
+      ),
+    ]);
     checks.database = "ok";
   } catch (error) {
     checks.database = "error";
     isHealthy = false;
     logger.error({ error }, "Database health check failed");
-  }
-
-  try {
-    const queue = getCampaignQueue();
-    await queue.getJobCounts("waiting", "active", "failed");
-    checks.redis = "ok";
-    checks.bullmq = "ok";
-  } catch (error) {
-    checks.redis = "error";
-    checks.bullmq = "error";
-    logger.warn({ error }, "Redis/BullMQ health check failed");
   }
 
   return c.json(
@@ -96,6 +91,9 @@ const healthHandler = async (c: Context) => {
 
 app.get("/health", healthHandler);
 app.get("/api/health", healthHandler);
+
+// Rate limiter applied AFTER /health so a Redis outage never blocks the healthcheck.
+app.use("*", publicRateLimitMiddleware);
 
 // Auth: no setup check needed
 app.route("/auth", authRoutes);
@@ -127,10 +125,6 @@ const server = serve({ fetch: app.fetch, port }, () => {
 const io = createSocketServer(server as never);
 const channelLookup = new ChannelLookupService();
 
-scheduleSetupReminderCron().catch((err) =>
-  logger.error(err, "Failed to start setup reminder cron")
-);
-
 try {
   schedulePlanDowngradeCron();
   logger.info("Plan downgrade cron job scheduled");
@@ -138,13 +132,32 @@ try {
   logger.error(err, "Failed to start plan downgrade cron");
 }
 
-if (process.env.REDIS_URL) {
+// BullMQ (queues, crons backed by Redis) needs a TCP/TLS Redis URL.
+// The Upstash REST URL (https://...) goes in UPSTASH_REDIS_REST_URL, not here.
+const redisTcpUrl = process.env.REDIS_URL;
+const bullMqEnabled =
+  !!redisTcpUrl &&
+  (redisTcpUrl.startsWith("redis://") || redisTcpUrl.startsWith("rediss://"));
+
+if (bullMqEnabled) {
+  scheduleSetupReminderCron().catch((err) =>
+    logger.error(err, "Failed to start setup reminder cron")
+  );
+
   try {
     startCampaignWorker();
     logger.info("Campaign BullMQ worker started");
   } catch (err) {
     logger.error(err, "Failed to start campaign worker");
   }
+} else {
+  logger.warn(
+    {
+      redisUrlSet: !!redisTcpUrl,
+      hint: "REDIS_URL must start with redis:// or rediss:// (TCP). REST URLs (https://) belong in UPSTASH_REDIS_REST_URL.",
+    },
+    "BullMQ workers/crons disabled — REDIS_URL is not a TCP Redis URL"
+  );
 }
 
 app.route("/inbox", createInboxRoutes(io));
