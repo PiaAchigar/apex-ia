@@ -80,7 +80,6 @@ const healthHandler = async (c: Context) => {
   } catch (error) {
     checks.redis = "error";
     checks.bullmq = "error";
-    isHealthy = false;
     logger.warn({ error }, "Redis/BullMQ health check failed");
   }
 
