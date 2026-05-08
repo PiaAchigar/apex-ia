@@ -12,8 +12,7 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/database/package.json ./packages/database/
 COPY packages/types/package.json ./packages/types/
 COPY packages/utils/package.json ./packages/utils/
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # === Typecheck (catch errors before deploy) ===
 FROM deps AS build
@@ -31,9 +30,9 @@ ENV PORT=3001
 COPY --from=build /app /app
 RUN pnpm prune --prod
 
-# Baileys multi-device auth state — mount this as a persistent volume in Railway
+# Baileys multi-device auth state — Railway must mount a persistent volume
+# at /app/apps/api/.baileys-sessions (configured in Service → Settings → Volumes).
 RUN mkdir -p /app/apps/api/.baileys-sessions
-VOLUME ["/app/apps/api/.baileys-sessions"]
 
 WORKDIR /app/apps/api
 EXPOSE 3001
