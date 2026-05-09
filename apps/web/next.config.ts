@@ -7,6 +7,13 @@ const nextConfig: NextConfig = {
     domains: [],
     formats: ["image/avif", "image/webp"],
   },
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      ".js": [".ts", ".tsx", ".js"],
+      ".mjs": [".mts", ".mjs"],
+    };
+    return config;
+  },
   headers: async () => [
     {
       source: "/(.*)",
