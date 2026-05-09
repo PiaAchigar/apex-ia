@@ -26,7 +26,7 @@ const DEFAULT_BRANDING: BrandingConfig = {
   primaryColor: "#10B981",
   accentColor: "#10B981",
   faviconUrl: null,
-  appName: "Apex IA",
+  appName: "Complexa CRM",
 };
 
 export function useBranding() {

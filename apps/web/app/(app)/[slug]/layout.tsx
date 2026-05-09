@@ -21,7 +21,7 @@ export async function generateMetadata({
   return {
     title: {
       default: "Inbox",
-      template: `%s — ${slug} | Apex IA`,
+      template: `%s — ${slug} | Complexa CRM`,
     },
     icons: {
       icon: "/favicon.ico",

@@ -93,7 +93,7 @@ export function AppSidebar({ slug }: AppSidebarProps) {
         </div>
         {!isSidebarCollapsed && (
           <span className="text-sm font-bold text-white tracking-wide">
-            {branding?.appName ?? "Apex IA"}
+            {branding?.appName ?? "Complexa CRM"}
           </span>
         )}
       </div>

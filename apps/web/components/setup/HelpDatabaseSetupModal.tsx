@@ -82,7 +82,7 @@ export function HelpDatabaseSetupModal({ onClose }: HelpDatabaseSetupModalProps)
         </ol>
 
         <div className="mt-5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-300">
-          <strong>⚠️ Importante:</strong> Esta URL Apex IA la guarda encriptada con AES-256-GCM y nunca la expone.
+          <strong>⚠️ Importante:</strong> Esta URL la guardamos encriptada con AES-256-GCM y nunca será expuesta.
         </div>
 
         <div className="mt-4 flex justify-end gap-3">

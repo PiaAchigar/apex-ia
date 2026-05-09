@@ -24,8 +24,8 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: "Apex IA — CRM Omnicanal para tu Empresa.",
-    template: "%s | Apex IA",
+    default: "Complexa CRM — Omnicanal para tu Empresa.",
+    template: "%s | Complexa CRM",
   },
   description:
     "Centralizá WhatsApp, Instagram, Facebook, Telegram y más en un solo inbox. Automatizá con IA. Cierra más ventas.",
@@ -39,23 +39,23 @@ export const metadata: Metadata = {
     "chatbot",
     "IA",
   ],
-  authors: [{ name: "Apex IA" }],
+  authors: [{ name: "Complexa CRM" }],
   creator: "Complexa IA",
   metadataBase: new URL(
-    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://www.apex-ia.com.ar"
+    process.env["NEXT_PUBLIC_APP_URL"] ?? "https://crm.complexa.com.ar"
   ),
   openGraph: {
     type: "website",
     locale: "es_AR",
     url: "/",
-    siteName: "Apex IA",
-    title: "Apex IA — CRM Omnicanal con IA para PyMEs",
+    siteName: "Complexa CRM",
+    title: "Complexa CRM — CRM Omnicanal con IA para PyMEs",
     description:
       "Centralizá todos tus canales de mensajería. Automatizá con IA. Cierra más ventas.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Apex IA",
+    title: "Complexa CRM",
     description: "CRM Omnicanal, con automatización en la personalización de mensajes.",
   },
   robots: {

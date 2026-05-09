@@ -222,7 +222,7 @@ export function RegisterForm() {
             </label>
             <div className="flex items-center gap-0">
               <span className="bg-[#1F2937] border border-r-0 border-[#374151] rounded-l-xl px-3 py-3 text-gray-500 text-sm whitespace-nowrap">
-                apexia.com/
+                crm.complexa.com.ar/
               </span>
               <input
                 id="organizationSlug"
@@ -244,7 +244,7 @@ export function RegisterForm() {
             )}
             {!errors.organizationSlug && formData.organizationSlug && (
               <p className="mt-1 text-xs text-emerald-400 flex items-center gap-1">
-                <Check className="w-3 h-3" /> apexia.com/{formData.organizationSlug}
+                <Check className="w-3 h-3" /> crm.complexa.com.ar/{formData.organizationSlug}
               </p>
             )}
           </div>

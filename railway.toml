@@ -11,6 +11,21 @@ healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5
+# Solo redeployar si cambia algo que afecte a la API.
+# Excluye apps/web, packages/ui, docs y otros archivos que no afectan al backend.
+watchPatterns = [
+  "apps/api/**",
+  "packages/database/**",
+  "packages/types/**",
+  "packages/utils/**",
+  "pnpm-lock.yaml",
+  "package.json",
+  "pnpm-workspace.yaml",
+  "turbo.json",
+  "tsconfig.base.json",
+  "railway.toml",
+  ".dockerignore",
+]
 
 # NOTE: persistent volume must be created in Railway UI (Settings → Volumes)
 # and mounted at /app/apps/api/.baileys-sessions for WhatsApp QR session persistence.

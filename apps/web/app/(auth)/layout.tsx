@@ -15,7 +15,7 @@ export default function AuthLayout({
           <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">A</span>
           </div>
-          <span className="text-lg font-bold text-white">Apex IA</span>
+          <span className="text-lg font-bold text-white">Complexa CRM</span>
         </Link>
       </header>
 
@@ -25,7 +25,7 @@ export default function AuthLayout({
 
       <footer className="relative py-6 text-center">
         <p className="text-gray-600 text-xs">
-          © 2026 Apex IA.{" "}
+          © 2026 Complexa CRM.{" "}
           <Link href="/privacy" className="hover:text-gray-400 transition-colors cursor-pointer">
             Privacidad
           </Link>{" "}

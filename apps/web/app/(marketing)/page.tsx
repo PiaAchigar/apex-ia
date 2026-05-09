@@ -14,7 +14,7 @@ import { LandingFaqAccordion } from "@/components/marketing/LandingFaqAccordion"
 import { LandingNavbar } from "@/components/marketing/LandingNavbar";
 
 export const metadata: Metadata = {
-  title: "Apex IA — CRM Omnicanal con IA para PyMEs",
+  title: "Complexa CRM — CRM Omnicanal con IA para PyMEs",
 };
 
 const CHANNELS = [
@@ -133,7 +133,7 @@ const PRICING_PLANS = [
       "500 conversaciones / mes",
       "Inbox + Pipeline básico",
       "5 plantillas",
-      'Branding "Powered by Apex IA"',
+      'Branding "Powered by Complexa CRM"',
     ],
     cta: "Empezar gratis",
     href: "/register",
@@ -153,7 +153,7 @@ const PRICING_PLANS = [
       "Analytics + Reports completos",
       "Campaigns (5.000/mes)",
       "Transcripción de audio (Whisper)",
-      "Sin branding de Apex IA",
+      "Sin branding de Complexa CRM",
       "API Access",
       "Integraciones de calendario",
     ],
@@ -189,7 +189,7 @@ const FAQ_ITEMS = [
   {
     question: "¿Funciona con WhatsApp Business API oficial?",
     answer:
-      "Sí. Apex IA integra tanto la API oficial de Meta (WhatsApp Cloud API) como WhatsApp QR (no oficial con Baileys). Podés conectar ambas en el mismo inbox.",
+      "Sí. Complexa CRM integra tanto la API oficial de Meta (WhatsApp Cloud API) como WhatsApp QR (no oficial con Baileys). Podés conectar ambas en el mismo inbox.",
   },
   {
     question: "¿Necesito saber programar para usar el Flow Builder?",
@@ -199,7 +199,7 @@ const FAQ_ITEMS = [
   {
     question: "¿Cómo funciona el plan gratuito?",
     answer:
-      "El plan Starter es gratis para siempre con 1 usuario, 2 canales y 500 conversaciones por mes. Incluye branding 'Powered by Apex IA'. Podés upgradear en cualquier momento.",
+      "El plan Starter es gratis para siempre con 1 usuario, 2 canales y 500 conversaciones por mes. Incluye branding 'Powered by Complexa CRM'. Podés upgradear en cualquier momento.",
   },
   {
     question: "¿Mis datos están seguros?",
@@ -214,7 +214,7 @@ const FAQ_ITEMS = [
   {
     question: "¿Qué proveedores de IA son compatibles?",
     answer:
-      "Apex IA integra Anthropic Claude (Haiku / Sonnet), OpenAI GPT-4o, Google Gemini y OpenRouter. Podés configurar un proveedor principal y uno de fallback automático.",
+      "Complexa CRM integra Anthropic Claude (Haiku / Sonnet), OpenAI GPT-4o, Google Gemini y OpenRouter. Podés configurar un proveedor principal y uno de fallback automático.",
   },
   {
     question: "¿Tienen soporte para LATAM?",
@@ -369,7 +369,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-gray-400 text-lg mb-8 leading-relaxed">
                 Configurá Claude, GPT-4o, Gemini o OpenRouter como tu proveedor
-                principal. Si falla uno, Apex IA cambia al siguiente
+                principal. Si falla uno, Complexa CRM cambia al siguiente
                 automáticamente, sin interrupciones para tus clientes.
               </p>
               <div className="flex flex-col gap-3">
@@ -549,7 +549,7 @@ export default function LandingPage() {
                 <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">A</span>
                 </div>
-                <span className="text-xl font-bold">Apex IA</span>
+                <span className="text-xl font-bold">Complexa CRM</span>
               </div>
               <p className="text-gray-400 text-sm max-w-xs leading-relaxed">
                 CRM omnicanal con IA para PyMEs y emprendedores latinoamericanos.
@@ -593,10 +593,10 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-[#374151] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-500 text-sm">
-              © 2026 Apex IA. Todos los derechos reservados.
+              © 2026 Complexa CRM. Todos los derechos reservados.
             </p>
             <p className="text-gray-600 text-xs">
-              Construido para Complexa IA con ❤️
+              Construido para Complexa IA
             </p>
           </div>
         </div>

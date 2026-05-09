@@ -205,7 +205,7 @@ export default function SetupPage() {
           Configuración inicial
         </h1>
         <p className="mb-8 text-center text-sm text-gray-400">
-          Conectá tu base de datos para empezar a usar Apex IA
+          Conectá tu base de datos para empezar a usar el CRM
         </p>
 
         {/* Tab navigation */}

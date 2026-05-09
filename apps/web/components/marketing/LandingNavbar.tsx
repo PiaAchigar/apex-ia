@@ -38,14 +38,14 @@ export function LandingNavbar() {
           <Link
             href="/"
             className="flex items-center gap-2 cursor-pointer"
-            aria-label="Apex IA — ir al inicio"
+            aria-label="Complexa CRM — ir al inicio"
           >
             <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center glow-emerald">
               <span className="text-white font-bold text-sm" aria-hidden="true">
                 A
               </span>
             </div>
-            <span className="text-lg font-bold text-white">Apex IA</span>
+            <span className="text-lg font-bold text-white">Complexa CRM</span>
           </Link>
 
           {/* Desktop nav */}
