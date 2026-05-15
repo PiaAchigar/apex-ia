@@ -140,15 +140,21 @@ const bullMqEnabled =
   (redisTcpUrl.startsWith("redis://") || redisTcpUrl.startsWith("rediss://"));
 
 if (bullMqEnabled) {
-  scheduleSetupReminderCron().catch((err) =>
-    logger.error(err, "Failed to start setup reminder cron")
-  );
+  const SKIP_WORKERS = process.env.SKIP_WORKERS === "true";
 
-  try {
-    startCampaignWorker();
-    logger.info("Campaign BullMQ worker started");
-  } catch (err) {
-    logger.error(err, "Failed to start campaign worker");
+  if (!SKIP_WORKERS) {
+    scheduleSetupReminderCron().catch((err) =>
+      logger.error(err, "Failed to start setup reminder cron")
+    );
+
+    try {
+      startCampaignWorker();
+      logger.info("Campaign BullMQ worker started");
+    } catch (err) {
+      logger.error(err, "Failed to start campaign worker");
+    }
+  } else {
+    logger.warn("BullMQ workers/crons disabled via SKIP_WORKERS environment variable");
   }
 } else {
   logger.warn(

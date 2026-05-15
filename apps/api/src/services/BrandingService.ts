@@ -8,6 +8,7 @@ export interface BrandingConfig {
   primaryColor: string;
   accentColor: string;
   faviconUrl: string | null;
+  appName: string | null;
 }
 
 export interface UpdateBrandingInput {
@@ -15,6 +16,7 @@ export interface UpdateBrandingInput {
   primaryColor?: string | undefined;
   accentColor?: string | undefined;
   faviconUrl?: string | null | undefined;
+  appName?: string | null | undefined;
 }
 
 const BRANDING_DEFAULTS = {
@@ -33,6 +35,7 @@ export class BrandingService {
           primaryColor: organizations.primaryColor,
           accentColor: organizations.accentColor,
           faviconUrl: organizations.faviconUrl,
+          appName: organizations.appName,
         })
         .from(organizations)
         .where(eq(organizations.id, organizationId));
@@ -47,6 +50,7 @@ export class BrandingService {
         primaryColor: org.primaryColor || BRANDING_DEFAULTS.primaryColor,
         accentColor: org.accentColor || BRANDING_DEFAULTS.accentColor,
         faviconUrl: org.faviconUrl || null,
+        appName: org.appName || null,
       };
     } catch (error) {
       logger.error({ organizationId, error }, "Error fetching branding");
@@ -64,6 +68,7 @@ export class BrandingService {
         primaryColor: string;
         accentColor: string;
         faviconUrl: string | null;
+        appName: string | null;
       }> = {};
 
       if (input.logoUrl !== undefined) {
@@ -77,6 +82,9 @@ export class BrandingService {
       }
       if (input.faviconUrl !== undefined) {
         updateData.faviconUrl = input.faviconUrl;
+      }
+      if (input.appName !== undefined) {
+        updateData.appName = input.appName;
       }
 
       await this.publicDb

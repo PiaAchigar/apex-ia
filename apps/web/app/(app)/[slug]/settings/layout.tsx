@@ -23,6 +23,7 @@ export async function generateMetadata({
 const SETTINGS_TABS = [
   { href: "general", label: "General" },
   { href: "channels", label: "Canales" },
+  { href: "branding", label: "Marca" },
   { href: "team", label: "Equipo" },
   { href: "billing", label: "Facturación" },
   { href: "setup", label: "Configuración Inicial" },

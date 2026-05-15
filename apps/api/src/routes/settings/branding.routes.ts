@@ -12,6 +12,7 @@ const updateBrandingSchema = z.object({
   primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
   accentColor: z.string().regex(/^#[0-9A-F]{6}$/i).optional(),
   faviconUrl: z.string().url().optional().nullable(),
+  appName: z.string().min(1).max(100).optional().nullable(),
 });
 
 type UpdateBrandingInput = z.infer<typeof updateBrandingSchema>;

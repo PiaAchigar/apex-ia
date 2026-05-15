@@ -15,6 +15,7 @@ export default function BrandingPage() {
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#10B981");
   const [accentColor, setAccentColor] = useState("#10B981");
+  const [appName, setAppName] = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -24,6 +25,7 @@ export default function BrandingPage() {
       setLogoPreviewUrl(branding.logoUrl || null);
       setPrimaryColor(branding.primaryColor);
       setAccentColor(branding.accentColor);
+      setAppName(branding.appName || "");
     }
   }, [branding]);
 
@@ -55,6 +57,7 @@ export default function BrandingPage() {
         logoUrl: logoPreviewUrl || null,
         primaryColor,
         accentColor,
+        appName: appName || undefined,
       });
       setSaveSuccess(true);
       setLogoFile(null);
@@ -135,6 +138,27 @@ export default function BrandingPage() {
             />
           </div>
 
+          {/* App Name Section */}
+          <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
+            <h2 className="mb-4 text-lg font-semibold text-white">Nombre de la App</h2>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-300">
+                Nombre que verán tus usuarios
+              </label>
+              <input
+                type="text"
+                value={appName}
+                onChange={(e) => setAppName(e.target.value)}
+                placeholder="Ej: Mi CRM Personalizado"
+                className="w-full rounded-lg border border-gray-600 bg-gray-900 px-3 py-2 text-sm text-white placeholder-gray-500 focus:border-emerald-500 focus:outline-none"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Este nombre aparecerá en la barra lateral y en toda la aplicación
+              </p>
+            </div>
+          </div>
+
           {/* Colors Section */}
           <div className="rounded-xl border border-gray-700 bg-gray-800 p-6">
             <h2 className="mb-4 text-lg font-semibold text-white">Colores</h2>
@@ -210,6 +234,13 @@ export default function BrandingPage() {
         <div className="rounded-xl border border-gray-700 bg-gray-800 p-6 h-fit">
           <h2 className="mb-4 text-lg font-semibold text-white">Preview</h2>
           <div className="space-y-4">
+            {appName && (
+              <div className="rounded-lg border border-gray-600 bg-gray-900 p-4">
+                <p className="mb-3 text-xs text-gray-500">Nombre de app:</p>
+                <p className="text-sm font-semibold text-white">{appName}</p>
+              </div>
+            )}
+
             {logoPreviewUrl && (
               <div className="rounded-lg border border-gray-600 bg-gray-900 p-4">
                 <p className="mb-3 text-xs text-gray-500">Tu logo:</p>
