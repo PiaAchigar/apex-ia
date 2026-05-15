@@ -40,6 +40,21 @@ const updateDealSchema = z.object({
   closedDate: z.coerce.date().optional(),
 });
 
+const renamePipelineSchema = z.object({
+  name: z.string().min(1).max(100),
+});
+
+const addStageSchema = z.object({
+  name: z.string().min(1).max(50),
+  color: z.string().max(7).optional(),
+});
+
+const updateStageSchema = z.object({
+  name: z.string().min(1).max(50).optional(),
+  color: z.string().max(7).optional(),
+  order: z.number().int().min(0).optional(),
+});
+
 const moveDealSchema = z.object({
   targetStageId: z.string().uuid(),
 });
@@ -195,6 +210,155 @@ export function createPipelineRoutes(): Hono {
       }
     }
   );
+
+  // PIPELINE MANAGEMENT ROUTES
+  routes.patch(
+    "/:pipelineId",
+    zValidator("json", renamePipelineSchema),
+    async (c) => {
+      const { pipelineId } = c.req.param();
+      const { name } = c.req.valid("json");
+      const tenantDb = c.get("tenantDb");
+
+      const pipelineService = new PipelineService(tenantDb);
+
+      try {
+        const pipeline = await pipelineService.renamePipeline(pipelineId, name);
+        return c.json({ success: true, data: pipeline });
+      } catch (err) {
+        if (err instanceof Error && err.message === "PIPELINE_NOT_FOUND") {
+          return c.json(
+            {
+              success: false,
+              error: { code: "PIPELINE_NOT_FOUND", message: "Pipeline no encontrado" },
+            },
+            404
+          );
+        }
+        throw err;
+      }
+    }
+  );
+
+  routes.delete("/:pipelineId", async (c) => {
+    const { pipelineId } = c.req.param();
+    const tenantDb = c.get("tenantDb");
+
+    const pipelineService = new PipelineService(tenantDb);
+
+    try {
+      await pipelineService.deletePipeline(pipelineId);
+      return c.json({ success: true, data: { pipelineId } });
+    } catch (err) {
+      if (err instanceof Error && err.message === "PIPELINE_NOT_FOUND") {
+        return c.json(
+          {
+            success: false,
+            error: { code: "PIPELINE_NOT_FOUND", message: "Pipeline no encontrado" },
+          },
+          404
+        );
+      }
+      throw err;
+    }
+  });
+
+  // PIPELINE STAGES MANAGEMENT ROUTES
+  routes.post(
+    "/:pipelineId/stages",
+    zValidator("json", addStageSchema),
+    async (c) => {
+      const { pipelineId } = c.req.param();
+      const { name, color } = c.req.valid("json");
+      const tenantDb = c.get("tenantDb");
+
+      const pipelineService = new PipelineService(tenantDb);
+
+      try {
+        const stage = await pipelineService.addStage(pipelineId, name, color);
+        return c.json({ success: true, data: stage }, 201);
+      } catch (err) {
+        if (err instanceof Error && err.message === "PIPELINE_NOT_FOUND") {
+          return c.json(
+            {
+              success: false,
+              error: { code: "PIPELINE_NOT_FOUND", message: "Pipeline no encontrado" },
+            },
+            404
+          );
+        }
+        throw err;
+      }
+    }
+  );
+
+  routes.patch(
+    "/:pipelineId/stages/:stageId",
+    zValidator("json", updateStageSchema),
+    async (c) => {
+      const { stageId } = c.req.param();
+      const rawInput = c.req.valid("json");
+      const tenantDb = c.get("tenantDb");
+
+      const pipelineService = new PipelineService(tenantDb);
+
+      try {
+        const stage = await pipelineService.updateStage(stageId, {
+          name: rawInput.name,
+          color: rawInput.color,
+          order: rawInput.order,
+        });
+        return c.json({ success: true, data: stage });
+      } catch (err) {
+        if (err instanceof Error && err.message === "STAGE_NOT_FOUND") {
+          return c.json(
+            {
+              success: false,
+              error: { code: "STAGE_NOT_FOUND", message: "Stage no encontrado" },
+            },
+            404
+          );
+        }
+        throw err;
+      }
+    }
+  );
+
+  routes.delete("/:pipelineId/stages/:stageId", async (c) => {
+    const { stageId } = c.req.param();
+    const targetStageId = c.req.query("targetStageId");
+    const tenantDb = c.get("tenantDb");
+
+    const pipelineService = new PipelineService(tenantDb);
+
+    try {
+      await pipelineService.deleteStage(
+        stageId,
+        targetStageId ? targetStageId : undefined
+      );
+      return c.json({ success: true, data: { stageId } });
+    } catch (err) {
+      if (err instanceof Error && err.message === "STAGE_NOT_FOUND") {
+        return c.json(
+          {
+            success: false,
+            error: { code: "STAGE_NOT_FOUND", message: "Stage no encontrado" },
+          },
+          404
+        );
+      }
+      if (err instanceof Error && err.message === "TARGET_STAGE_NOT_FOUND") {
+        return c.json(
+          {
+            success: false,
+            error: { code: "TARGET_STAGE_NOT_FOUND", message: "Stage destino no encontrado" },
+          },
+          404
+        );
+      }
+      throw err;
+    }
+  });
 
   return routes;
 }

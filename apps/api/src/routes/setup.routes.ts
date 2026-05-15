@@ -20,6 +20,7 @@ import { logger } from "../utils/logger.js";
 import { auditTrailService } from "../services/AuditTrailService.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// TODO: Tengo que dar la posibilidad que el cliente traigan su base de datos lista, y testearla antes de seguir
 const CLIENT_SCHEMA_SQL = resolve(
   __dirname,
   "../../../../packages/database/migrations/0001_client_schema.sql"
@@ -193,6 +194,7 @@ export function createSetupRoutes() {
   return router;
 }
 
+// Crea las tablas.
 async function runClientSchemaMigrations(databaseUrl: string): Promise<void> {
   const sql = await readFile(CLIENT_SCHEMA_SQL, "utf-8");
 

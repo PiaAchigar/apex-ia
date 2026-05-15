@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePipelineDealsGroupedByStage } from "@/hooks/usePipelineDealsGroupedByStage";
 import { apiClient } from "@/lib/api-client";
 import { PipelineStageColumn } from "./PipelineStageColumn";
@@ -9,6 +10,7 @@ import { Columns, Plus } from "lucide-react";
 
 type PipelineBoardKanbanProps = {
   pipelineId: string;
+  onAddStage?: () => void;
 };
 
 function SkeletonColumn() {
@@ -27,23 +29,53 @@ function SkeletonColumn() {
   );
 }
 
-export function PipelineBoardKanban({ pipelineId }: PipelineBoardKanbanProps) {
+export function PipelineBoardKanban({
+  pipelineId,
+  onAddStage,
+}: PipelineBoardKanbanProps) {
+  const queryClient = useQueryClient();
   const { data, isLoading, isError } = usePipelineDealsGroupedByStage(pipelineId);
   const [movingDealId, setMovingDealId] = useState<string | null>(null);
-  const [addDealModal, setAddDealModal] = useState<{ open: boolean; stageId: string | null }>({
+  const [deletingDealId, setDeletingDealId] = useState<string | null>(null);
+  const [addDealModal, setAddDealModal] = useState<{
+    open: boolean;
+    stageId: string | null;
+  }>({
     open: false,
     stageId: null,
   });
 
   // Get org slug from sessionStorage (set during login)
-  const orgSlug = typeof window !== "undefined" ? sessionStorage.getItem("apex_org_slug") ?? "" : "";
+  const orgSlug =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("apex_org_slug") ?? ""
+      : "";
 
   async function handleMoveDeal(dealId: string, targetStageId: string) {
     setMovingDealId(dealId);
     try {
-      await apiClient.patch(`/pipeline/deals/${dealId}/move`, { targetStageId });
+      await apiClient.patch(`/pipeline/deals/${dealId}/move`, {
+        targetStageId,
+      });
+      // Invalidate the board query to refresh
+      queryClient.invalidateQueries({
+        queryKey: ["pipeline-board", pipelineId],
+      });
     } finally {
       setMovingDealId(null);
+    }
+  }
+
+  async function handleDeleteDeal(dealId: string) {
+    setDeletingDealId(dealId);
+    try {
+      await apiClient.delete(`/pipeline/deals/${dealId}`);
+      // Invalidate the board query to refresh
+      queryClient.invalidateQueries({
+        queryKey: ["pipeline-board", pipelineId],
+      });
+    } finally {
+      setDeletingDealId(null);
     }
   }
 
@@ -96,14 +128,20 @@ export function PipelineBoardKanban({ pipelineId }: PipelineBoardKanbanProps) {
         {stages.map((stage) => (
           <PipelineStageColumn
             key={stage.id}
+            pipelineId={pipelineId}
             stage={stage}
+            movingDealId={movingDealId}
             onMoveDeal={handleMoveDeal}
+            onDeleteDeal={handleDeleteDeal}
             onAddDeal={handleAddDeal}
+            deletingDealId={deletingDealId}
+            otherStages={stages.filter((s) => s.id !== stage.id)}
           />
         ))}
 
-        {/* Add stage placeholder */}
+        {/* Add stage button */}
         <button
+          onClick={onAddStage}
           className="flex-shrink-0 w-64 h-12 flex items-center justify-center gap-2 border-2 border-dashed border-[#374151] rounded-xl text-sm text-gray-600 hover:text-gray-400 hover:border-[#4B5563] transition-colors"
           aria-label="Agregar nueva etapa"
         >

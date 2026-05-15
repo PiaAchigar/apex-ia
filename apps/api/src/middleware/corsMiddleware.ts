@@ -2,6 +2,7 @@ import { cors } from 'hono/cors'
 import type { Context } from 'hono'
 
 // Dominios permitidos según ambiente
+// Validar IP de n8n también - agregar
 const getAllowedOrigins = () => {
   const env = process.env.NODE_ENV
 
@@ -13,6 +14,10 @@ const getAllowedOrigins = () => {
       'http://127.0.0.1:3000',
       'http://127.0.0.1:3001',
       'http://127.0.0.1:3002',
+      // IP de máquina en red local para testing externo
+      'http://192.168.0.17:3000',
+      'http://192.168.0.17:3001',
+      'http://192.168.0.17:3002',
     ]
   }
 
@@ -25,9 +30,8 @@ const getAllowedOrigins = () => {
 
   // production
   return [
-    'https://app.apexia.com',
-    'https://apexia.com',
-    'https://www.apex-ia.com.ar'
+    'https://crm.complexa.com.ar',
+    'https://www.crm.complexa.com.ar',
   ]
 }
 

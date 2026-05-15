@@ -25,8 +25,8 @@ export function usePlanLimits(): UseQueryResult<PlanLimitsData, Error> {
   return useQuery({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      const response = await apiClient.get<PlanLimitsResult>("/billing/plan-limits");
-      return response.data;
+      const response = await apiClient.get<PlanLimitsData>("/billing/plan-limits");
+      return response;
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,

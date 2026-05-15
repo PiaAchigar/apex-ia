@@ -110,7 +110,7 @@ export function RegisterForm() {
       }
 
       const { organizationSlug } = data.data;
-      router.push(`/${organizationSlug}/inbox`);
+      router.push(`/${organizationSlug}/setup`);
     } catch {
       setServerError("Error de conexión. Verificá tu internet e intentá de nuevo.");
     } finally {
@@ -268,7 +268,7 @@ export function RegisterForm() {
             <span>Creando cuenta...</span>
           </>
         ) : (
-          "Crear cuenta gratis"
+          "Crear cuenta"
         )}
       </button>
 

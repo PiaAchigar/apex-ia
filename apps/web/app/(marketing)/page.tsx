@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { LandingFaqAccordion } from "@/components/marketing/LandingFaqAccordion";
 import { LandingNavbar } from "@/components/marketing/LandingNavbar";
+import { FloatingWhatsAppButton } from "@/components/marketing/FloatingWhatsAppButton";
 
 export const metadata: Metadata = {
   title: "Complexa CRM — CRM Omnicanal con IA para PyMEs",
@@ -122,7 +123,7 @@ const FEATURES = [
 const PRICING_PLANS = [
   {
     name: "Starter",
-    price: "$0",
+    price: "$15000",
     period: "para siempre",
     description: "Perfecto para empezar a organizar tu negocio",
     highlight: false,
@@ -135,12 +136,12 @@ const PRICING_PLANS = [
       "5 plantillas",
       'Branding "Powered by Complexa CRM"',
     ],
-    cta: "Empezar gratis",
+    cta: "Registrarme",
     href: "/register",
   },
   {
     name: "Growth",
-    price: "$49",
+    price: "$49000",
     period: "por mes",
     description: "Para equipos que quieren escalar sin límites",
     highlight: true,
@@ -157,12 +158,12 @@ const PRICING_PLANS = [
       "API Access",
       "Integraciones de calendario",
     ],
-    cta: "Probar 14 días gratis",
+    cta: "Registrarme",
     href: "/register?plan=growth",
   },
   {
     name: "Business",
-    price: "$149",
+    price: "$149000",
     period: "por mes",
     description: "Para empresas con necesidades avanzadas",
     highlight: false,
@@ -239,6 +240,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#111827] text-[#F9FAFB]">
       <LandingNavbar />
+      <FloatingWhatsAppButton />
 
       {/* Hero */}
       <section className="relative overflow-hidden pt-32 pb-24 px-4">
@@ -267,7 +269,7 @@ export default function LandingPage() {
               href="/register"
               className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-8 py-4 rounded-xl transition-all duration-200 glow-emerald hover:glow-emerald-strong cursor-pointer text-lg"
             >
-              Empezar gratis
+              Prueba la demo gratis
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
@@ -526,13 +528,13 @@ export default function LandingPage() {
                 ¿Listo para centralizar tus mensajes?
               </h2>
               <p className="text-gray-400 text-lg mb-8">
-                Empezá gratis hoy. Sin tarjeta de crédito. Sin límite de tiempo.
+                Demo gratis hoy. Sin tarjeta de crédito. Sin límite de tiempo.
               </p>
               <Link
                 href="/register"
                 className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-10 py-4 rounded-xl transition-all duration-200 glow-emerald cursor-pointer text-lg"
               >
-                Crear cuenta gratis
+                Prueba la Demo gratis
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </div>

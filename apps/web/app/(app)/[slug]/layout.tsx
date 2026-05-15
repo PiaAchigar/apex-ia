@@ -1,11 +1,6 @@
 import type { Metadata } from "next";
-import { AppSidebar } from "@/components/shared/AppSidebar";
-import { AppTopbar } from "@/components/shared/AppTopbar";
-import { TrialBanner } from "@/components/shared/TrialBanner";
-import { PlanLimitBanner } from "@/components/shared/PlanLimitBanner";
-import { SetupGuard } from "@/components/setup/SetupGuard";
-import { ComplexaFooter } from "@/components/shared/ComplexaFooter";
 import { QueryClientProvider } from "./QueryClientProvider";
+import { AppLayoutClient } from "@/components/shared/AppLayoutClient";
 
 type AppLayoutProps = {
   children: React.ReactNode;
@@ -34,19 +29,9 @@ export default async function AppLayout({ children, params }: AppLayoutProps) {
 
   return (
     <QueryClientProvider>
-      <div className="flex h-screen w-full overflow-hidden bg-[#111827] relative flex-col">
-        <div className="flex flex-1 min-w-0 overflow-hidden">
-          <AppSidebar slug={slug} />
-          <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-            <AppTopbar slug={slug} />
-            <TrialBanner slug={slug} />
-            <PlanLimitBanner />
-            <SetupGuard />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden">{children}</main>
-          </div>
-        </div>
-        <ComplexaFooter />
-      </div>
+      <AppLayoutClient slug={slug}>
+        {children}
+      </AppLayoutClient>
     </QueryClientProvider>
   );
 }

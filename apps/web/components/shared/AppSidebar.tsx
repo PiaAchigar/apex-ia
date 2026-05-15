@@ -34,7 +34,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { label: "Inbox", href: "inbox", icon: Inbox },
-  { label: "Pipeline", href: "pipeline", icon: Kanban, adminOnly: true },
+  { label: "Pipeline", href: "pipeline", icon: Kanban, adminOnly: false },
   { label: "Contactos", href: "contacts", icon: Users },
   { label: "Tareas", href: "tasks", icon: CheckSquare },
   { label: "Calendario", href: "calendar", icon: Calendar },

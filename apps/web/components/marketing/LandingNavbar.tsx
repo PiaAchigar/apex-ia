@@ -23,9 +23,7 @@ export function LandingNavbar() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? "glass border-b border-[#374151]/50"
-          : "bg-transparent"
+        isScrolled ? "glass" : "bg-transparent"
       }`}
     >
       <div className="mx-auto max-w-6xl px-4">
@@ -73,7 +71,7 @@ export function LandingNavbar() {
               href="/register"
               className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 glow-emerald cursor-pointer"
             >
-              Empezar gratis
+              Registrarme
             </Link>
           </div>
 
@@ -122,7 +120,7 @@ export function LandingNavbar() {
               onClick={() => setIsMobileMenuOpen(false)}
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-xl text-sm font-semibold text-center transition-all duration-200 cursor-pointer"
             >
-              Empezar gratis
+              Registrarme
             </Link>
           </div>
         )}
